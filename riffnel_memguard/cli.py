@@ -195,7 +195,14 @@ def demo(scenario: str = typer.Argument(..., help="stale | erasure | sqlite-stal
     if runner is None:
         raise typer.BadParameter("scenario must be stale, erasure, sqlite-stale, sqlite-erasure, real-stale or real-erasure")
     wd = workdir or Path(tempfile.mkdtemp(prefix="riffnel_"))
-    result = runner(wd)
+    try:
+        result = runner(wd)
+    except Exception as e:  # real-stack demos call an external model; show the cause, not a stack trace
+        if not scenario.startswith("real-"):
+            raise
+        typer.echo(f"\n模型调用失败：{type(e).__name__}: {str(e)[:300]}\n"
+                   "请检查 RIFFNEL_AGENT_MODEL 与对应密钥环境变量；不设置 RIFFNEL_AGENT_MODEL 则使用离线替身。", err=True)
+        raise typer.Exit(2)
     typer.echo(f"\n结果：{'通过' if result['passed'] else '失败'}（工作目录 {wd}）")
     raise typer.Exit(0 if result["passed"] else 1)
 
