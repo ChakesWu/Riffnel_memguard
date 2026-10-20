@@ -137,3 +137,21 @@ def test_semantic_layer_is_advisory(tmp_path):
     res = run_probe(store, BankAssistAgent(store), {"user": "u"}, ["13800000000"],
                     "客户张三的手机号 13800000000", ["我的手机号是多少？"])
     assert res["L3_semantic"] and res["needs_review"] and res["clean"]  # flagged for review, not failed
+
+
+def test_regression_ignores_spacing_and_markdown(tmp_path):
+    from riffnel_memguard.core.models import TestCase
+    from riffnel_memguard.engines import verifier
+
+    class Echo:
+        def __init__(self, text):
+            self.text = text
+
+        def answer(self, q, scope):
+            return self.text, []
+
+    t = TestCase(id="t", key="k", question="q", scope={}, must_include=["6笔"], must_not_include=["3笔"])
+    for ans in ["需要刷满6笔。", "需要刷满 6 笔", "需要刷满 **6 笔**（自2026起）", "需要刷满６笔"]:
+        assert verifier.regression(Echo(ans), [t], set())["passed"], ans
+    assert not verifier.regression(Echo("需要刷满 3 笔"), [t], set())["passed"]
+    assert not verifier.regression(Echo("需要刷满 **3笔** 以及 6 笔"), [t], set())["passed"]  # must_not_include still bites
