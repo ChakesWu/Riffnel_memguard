@@ -18,6 +18,14 @@
 - PyPI 版本为 0.6.1，GitHub README 描述的是 0.7.1，两者可能有差异；0.7.x 未验证。
 - `forget-check` 只输出文本，没有 JSON，因此尚未做交叉校验。
 
+## 更新：Mem0 开源版接口已实测（mem0ai 2.2.1，Apache-2.0）
+
+在干净 venv 中 `pip install mem0ai` 后用 `inspect` 读取 `Memory` 类签名：
+- `get(memory_id)`、`update(memory_id, text=None, metadata=None, ...)`、`delete(memory_id)`、`history(memory_id)`、`delete_all(user_id|agent_id|run_id)`。
+- `get_all(*, filters=None, top_k=20, show_expired=False)`、`search(query, *, top_k=20, filters=None, threshold=0.1, ...)`：过滤条件走关键字参数 `filters`。
+- `add(messages, *, user_id, agent_id, run_id, metadata, timestamp, expiration_date, infer=True, ...)`：`infer=False` 可能允许直接写入原文，**未验证**。
+- 因此适配器所需的 `list/get/search/add/delete/update` 都有对应接口，`invalidate` 可退化为「删除 + 新增 + 记录」或写 `expiration_date`/metadata。这些只是签名，**尚未连接真实 Mem0 实例运行**（初始化需要嵌入与 LLM 配置）。
+
 ## 建议顺序
 
 1. **memwall 结果导入**：与 M6 直接对应，且只依赖文件格式，v0.1 就可做。
