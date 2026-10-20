@@ -160,6 +160,10 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 
 [Apache-2.0](LICENSE)
 
+## 作品介绍
+
+[docs/intro/Riffnel_memguard_作品介绍.pdf](docs/intro/Riffnel_memguard_作品介绍.pdf)（草稿；源文件 `docs/intro/content.html`，用 `python3 docs/intro/build.py` 重新生成，需要 playwright 与 pypdf）。
+
 ## 治理与贡献
 
 [CONTRIBUTING](CONTRIBUTING.md) · [GOVERNANCE](GOVERNANCE.md) · [SECURITY](SECURITY.md) · [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
