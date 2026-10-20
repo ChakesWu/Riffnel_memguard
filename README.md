@@ -98,7 +98,7 @@ riffnel-memguard demo real-erasure    # 用 Mem0 自带 delete 删除后，历�
 **真实发现（mem0ai 2.2.1 实测）：** `Memory.delete` 只删除活动记忆，被删文字的完整内容仍保留在它的 `history.db`（ADD/UPDATE/DELETE 三类记录）。本项目把这些历史行当作残留（trace）交给探测器，修正时清除并 `VACUUM`；演示最后用**不依赖本项目探测器**的方式直接扫描数据目录的原始字节，确认修正前 `history.db` 与 Qdrant 的 `storage.sqlite` 含有目标，修正后均不含。这只是这一次运行的观察：SQLite 空闲页是否残留取决于具体引擎行为，不构成通用保证。
 
 **必须说明的替身与限制：**
-- 语言模型：未设置 `RIFFNEL_AGENT_MODEL` 时使用 `OfflineStandIn`，是模仿客服策略的确定性函数，**不是语言模型**。设为 Pydantic AI 的模型串（如 `deepseek:deepseek-chat`、`anthropic:<模型>`、`openai:<模型>`，并设置对应的密钥环境变量）即可接真实模型。已用真实的 `deepseek:deepseek-chat` 对 `real-stale` 做过两批各 10 次的验证，结果与修复过程见 [benchmark/REAL_MODEL_RUNS.md](benchmark/REAL_MODEL_RUNS.md)（仅一个场景，样本很小）。`real-erasure` 尚未用真实模型测过。
+- 语言模型：未设置 `RIFFNEL_AGENT_MODEL` 时使用 `OfflineStandIn`，是模仿客服策略的确定性函数，**不是语言模型**。设为 Pydantic AI 的模型串（如 `deepseek:deepseek-chat`、`anthropic:<模型>`、`openai:<模型>`，并设置对应的密钥环境变量）即可接真实模型。已用真实的 `deepseek:deepseek-chat` 对 `real-stale` 做过两批各 10 次的验证，结果与修复过程见 [benchmark/REAL_MODEL_RUNS.md](benchmark/REAL_MODEL_RUNS.md)（仅一个场景，样本很小）。`real-erasure` 也做过 5 次真实模型验证，见同一文件。
 - 嵌入模型：开发环境无法下载模型，使用离线字符 n-gram 哈希嵌入（`OfflineHashEmbedder`），仅用于演示与测试；生产应在 Mem0 中配置真实嵌入器，并把自己的 `Memory` 传给 `Mem0Adapter`。
 - Mem0 默认向 PostHog 发送匿名遥测；`make_offline_memory` 会强制关闭（本项目默认不联网）。包装你自己的 `Memory` 时，其遥测设置不受影响。Mem0 在导入时还会创建空的 `~/.mem0` 目录。
 - 适配器每次读取都会 `get_all`（上限 10000 条），只适合小规模数据；`add(infer=False)` 直接写入原文，不经过 Mem0 的 LLM 抽取。
@@ -148,7 +148,7 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 | 已实现 | 未实现 |
 |---|---|
 | 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、**SQLite 适配器**、**Mem0 适配器**、规则抽取、字符 n-gram TF-IDF 检索 | Letta 适配器（见 docs/INTEGRATION.md） |
-| Pydantic AI 企业客服智能体 + 检索追踪（真实 DeepSeek 模型下 `real-stale` 已验证；离线替身用于 CI） | 真实嵌入器验证；`real-erasure`、M2、M3 的真实模型验证 |
+| Pydantic AI 企业客服智能体 + 检索追踪（真实 DeepSeek 模型下 `real-stale` 已验证；离线替身用于 CI） | 真实嵌入器验证；M2、M3 的真实模型验证 |
 | 调查：M1 过期、M2 冲突、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | 向量相似度（仅字符 n-gram）、LLM 抽取 |
 | 溯源链接（显式 / 主题键 / 语义）、影响分析、记忆体检 `scan`（M1+M2+M4） | |
 | 修正：预演、审批、应用、回滚（删除不可回滚） | 其他外部扫描工具的导入；memwall `forget-check` 的交叉校验 |
