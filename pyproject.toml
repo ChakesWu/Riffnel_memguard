@@ -20,6 +20,8 @@ dependencies = [
 [project.optional-dependencies]
 ui = ["streamlit"]
 memwall = ["memwall"]
+mem0 = ["mem0ai"]
+agent = ["pydantic-ai-slim"]
 dev = ["pytest"]
 
 [project.scripts]

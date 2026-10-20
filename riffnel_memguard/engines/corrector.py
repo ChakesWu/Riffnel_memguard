@@ -20,7 +20,9 @@ def make_plan(findings: list[Finding], store, incident_id: str | None, clauses_b
     seen: set[tuple] = set()
 
     def add(a: Action):
-        k = (a.type, a.target)
+        # an invalidate and a purge_derived(mode=invalidate) on the same memory are one change
+        deactivate = a.type == "invalidate" or (a.type == "purge_derived" and a.payload.get("mode") == "invalidate")
+        k = ("deactivate" if deactivate else a.type, a.target)
         if k not in seen:
             seen.add(k)
             actions.append(a)
@@ -37,7 +39,10 @@ def make_plan(findings: list[Finding], store, incident_id: str | None, clauses_b
             exists = any(r.status == "active" and r.id != rec.id and r.scope == rec.scope
                          and (mc := memory_claim(r, clause)) is not None and mc.value == cur.value
                          for r in store.list())
-            if not exists:
+            planned = any(x.type == "add" and x.payload["record"]["key"] == clause.key
+                          and x.payload["record"]["scope"] == rec.scope for x in actions)
+            # only facts get a replacement: a stale summary is retired, not re-created
+            if not exists and not planned and rec.kind == "fact":
                 new = MemoryRecord(id=_id("mem", rec.id + cur.id), content=cur.text, kind="fact", scope=rec.scope,
                                    key=clause.key, value=cur.value, written_at=as_of, supersedes=rec.id)
                 add(Action(type="add", target=new.id, payload={"record": new.model_dump()}))

@@ -56,12 +56,18 @@ def l4_behavior(agent, scope, probe_questions, targets):
     return hits
 
 
+def traces_of(store) -> list:
+    """Records a store keeps outside its live memories (e.g. Mem0 history rows). Optional adapter method."""
+    return store.traces() if hasattr(store, "traces") else []
+
+
 def run_probe(store, agent, scope, targets, description, probe_questions) -> dict:
     """Probe every record that still exists (including invalidated ones) and the agent's behavior."""
     records = [r for r in store.list() if r.status != "deleted"]
+    scanned = records + traces_of(store)
     result = {
-        "L1_exact": [i for i, _ in l1_exact(records, targets)],
-        "L2_variant": [i for i, _ in l2_variant(records, targets)],
+        "L1_exact": [i for i, _ in l1_exact(scanned, targets)],
+        "L2_variant": [i for i, _ in l2_variant(scanned, targets)],
         "L3_semantic": l3_semantic(records, description),
         "L4_behavior": l4_behavior(agent, scope, probe_questions, targets),
         "targets_masked": [mask(t) for t in targets],

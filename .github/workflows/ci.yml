@@ -11,10 +11,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[dev,ui,memwall]"
+      - run: pip install -e ".[dev,ui,memwall,mem0,agent]"
       - run: pytest
       - run: riffnel-memguard demo stale
       - run: riffnel-memguard demo erasure
+      - run: riffnel-memguard demo real-stale
+      - run: riffnel-memguard demo real-erasure
       - run: riffnel-memguard benchmark
   docker:
     runs-on: ubuntu-latest

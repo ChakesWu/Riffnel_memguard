@@ -13,5 +13,8 @@
 | [pytest](https://pypi.org/project/pytest/)（开发） | 测试 | 9.1.1 | MIT | |
 
 | [memwall](https://pypi.org/project/memwall/)（可选，不随本项目分发） | 扫描记忆，本项目仅导入其 JSON 报告 | 0.6.1 | MIT（PyPI 元数据与 GitHub README 均写 MIT） | 通过 `pip install ".[memwall]"` 安装 |
+| [mem0ai](https://pypi.org/project/mem0ai/)（可选 extra `mem0`） | 真实记忆库适配器 | 2.2.1 | Apache-2.0（PyPI 元数据） | 其依赖（含默认遥测用的 posthog）未逐项核实 |
+| [pydantic-ai-slim](https://pypi.org/project/pydantic-ai-slim/)（可选 extra `agent`） | 企业客服智能体 | 2.58.0 | MIT（PyPI 元数据） | |
+| [qdrant-client](https://pypi.org/project/qdrant-client/)（随 mem0ai 安装） | Mem0 本地向量库 | 1.19.1 | Apache-2.0（PyPI 元数据） | 传递依赖 |
 
 以上只核实了直接依赖，**传递依赖（如 numpy、scipy）尚未核实。** 本项目为 Apache-2.0，上列许可证均为宽松许可证，与 Apache-2.0 项目兼容（此为一般判断，非法律意见）。

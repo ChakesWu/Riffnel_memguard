@@ -179,12 +179,18 @@ def report(plan_id: str, ws: Path = WS_OPT):
 
 
 @app.command()
-def demo(scenario: str = typer.Argument(..., help="stale | erasure"),
+def demo(scenario: str = typer.Argument(..., help="stale | erasure | real-stale | real-erasure"),
          workdir: Path = typer.Option(None, help="Where to write working files (default: temp dir)")):
     """Run a full offline demo on simulated data."""
     runner = {"stale": demo_mod.run_stale, "erasure": demo_mod.run_erasure}.get(scenario)
+    if scenario.startswith("real-"):
+        try:
+            from . import demo_real
+        except ImportError as e:
+            raise typer.BadParameter(f'real-stack demos need extras: pip install ".[mem0,agent]" ({e})')
+        runner = {"real-stale": demo_real.run_stale, "real-erasure": demo_real.run_erasure}.get(scenario)
     if runner is None:
-        raise typer.BadParameter("scenario must be 'stale' or 'erasure'")
+        raise typer.BadParameter("scenario must be stale, erasure, real-stale or real-erasure")
     wd = workdir or Path(tempfile.mkdtemp(prefix="riffnel_"))
     result = runner(wd)
     typer.echo(f"\n结果：{'通过' if result['passed'] else '失败'}（工作目录 {wd}）")

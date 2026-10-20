@@ -24,7 +24,7 @@
 - `get(memory_id)`、`update(memory_id, text=None, metadata=None, ...)`、`delete(memory_id)`、`history(memory_id)`、`delete_all(user_id|agent_id|run_id)`。
 - `get_all(*, filters=None, top_k=20, show_expired=False)`、`search(query, *, top_k=20, filters=None, threshold=0.1, ...)`：过滤条件走关键字参数 `filters`。
 - `add(messages, *, user_id, agent_id, run_id, metadata, timestamp, expiration_date, infer=True, ...)`：`infer=False` 可能允许直接写入原文，**未验证**。
-- 因此适配器所需的 `list/get/search/add/delete/update` 都有对应接口，`invalidate` 可退化为「删除 + 新增 + 记录」或写 `expiration_date`/metadata。这些只是签名，**尚未连接真实 Mem0 实例运行**（初始化需要嵌入与 LLM 配置）。
+- 因此适配器所需的 `list/get/search/add/delete/update` 都有对应接口，`invalidate` 可退化为「删除 + 新增 + 记录」或写 `expiration_date`/metadata。已实现 `Mem0Adapter` 并在真实 Mem0 2.2.1 + 本地 Qdrant 上端到端运行（嵌入器与 LLM 用离线替身，见 README）；`invalidate` 通过更新元数据 `rf_status` 实现，`search` 带 `rf_status=active` 过滤。
 
 ## 建议顺序
 

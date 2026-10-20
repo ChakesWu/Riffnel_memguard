@@ -5,7 +5,7 @@ import re
 
 from ..core.models import Clause, Finding, Incident, scope_compatible
 from ..extract.rules import extract_claims, memory_claim
-from ..probes.erasure import l1_exact, l2_variant, mask
+from ..probes.erasure import l1_exact, l2_variant, mask, traces_of
 
 INJECTION = re.compile(r"(忽略(以上|之前|先前)|无视.*指令|ignore (all )?(previous|above)|system prompt)", re.I)
 
@@ -75,7 +75,7 @@ def investigate(incident: Incident, store, clauses: list[Clause]) -> list[Findin
 
 def investigate_erasure(store, targets: list[str]) -> list[Finding]:
     """Find residue of erased values in remaining records (raw or derived)."""
-    records = [r for r in store.list() if r.status != "deleted"]
+    records = [r for r in store.list() if r.status != "deleted"] + traces_of(store)
     hits = {i: "exact" for i, _ in l1_exact(records, targets)}
     hits.update({i: "variant" for i, _ in l2_variant(records, targets) if i not in hits})
     return [

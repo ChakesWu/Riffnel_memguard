@@ -76,6 +76,25 @@ Web 界面（黑白，需 `pip install -e ".[ui]"`）：`riffnel-memguard ui`，
 
 场景二用 `simulate-delete m_phone_raw`、`erase --subject user=u_demo --target 13800000000` 代替 `ask`/`investigate`/`plan`；来源更新后用 `revalidate --as-of <日期>`。
 
+## 真实堆栈（Mem0 + Pydantic AI）
+
+两个场景也可在真实的开源组件上跑：记忆库是 [Mem0](https://github.com/mem0ai/mem0) 开源版（Apache-2.0，本地 Qdrant + SQLite），智能体是基于 [Pydantic AI](https://github.com/pydantic/pydantic-ai)（MIT）的企业客服智能体（固定策略、必须调用 `recall` 工具、记录每次检索）。
+
+```bash
+pip install ".[mem0,agent]"
+riffnel-memguard demo real-stale      # 条款 3 笔 → 6 笔，真实检索与真实记忆库
+riffnel-memguard demo real-erasure    # 用 Mem0 自带 delete 删除后，历史库仍留有手机号
+```
+
+**真实发现（mem0ai 2.2.1 实测）：** `Memory.delete` 只删除活动记忆，被删文字的完整内容仍保留在它的 `history.db`（ADD/UPDATE/DELETE 三类记录）。本项目把这些历史行当作残留（trace）交给探测器，修正时清除并 `VACUUM`；演示最后用**不依赖本项目探测器**的方式直接扫描数据目录的原始字节，确认修正前 `history.db` 与 Qdrant 的 `storage.sqlite` 含有目标，修正后均不含。这只是这一次运行的观察：SQLite 空闲页是否残留取决于具体引擎行为，不构成通用保证。
+
+**必须说明的替身与限制：**
+- 语言模型：未设置 `RIFFNEL_AGENT_MODEL` 时使用 `OfflineStandIn`，是模仿客服策略的确定性函数，**不是语言模型**。设为 Pydantic AI 的模型串（如 `anthropic:<模型>`、`openai:<模型>`）即可接真实模型，**此路径未在本仓库测试**（开发环境没有密钥）。
+- 嵌入模型：开发环境无法下载模型，使用离线字符 n-gram 哈希嵌入（`OfflineHashEmbedder`），仅用于演示与测试；生产应在 Mem0 中配置真实嵌入器，并把自己的 `Memory` 传给 `Mem0Adapter`。
+- Mem0 默认向 PostHog 发送匿名遥测；`make_offline_memory` 会强制关闭（本项目默认不联网）。包装你自己的 `Memory` 时，其遥测设置不受影响。Mem0 在导入时还会创建空的 `~/.mem0` 目录。
+- 适配器每次读取都会 `get_all`（上限 10000 条），只适合小规模数据；`add(infer=False)` 直接写入原文，不经过 Mem0 的 LLM 抽取。
+- 数据仍是仿真的示例银行，**没有接入任何真实企业系统**。
+
 ## 溯源、影响分析与体检
 
 ```bash
@@ -119,7 +138,8 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 
 | 已实现 | 未实现 |
 |---|---|
-| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、规则抽取、字符 n-gram TF-IDF 检索 | SQLite 适配器、Mem0 / Letta 适配器 |
+| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、**Mem0 适配器**、规则抽取、字符 n-gram TF-IDF 检索 | SQLite 适配器、Letta 适配器 |
+| Pydantic AI 企业客服智能体 + 检索追踪（离线替身模型；真实模型路径未测试） | 真实模型与真实嵌入器的端到端验证 |
 | 调查：M1 过期、M2 冲突、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | 向量相似度（仅字符 n-gram）、LLM 抽取 |
 | 溯源链接（显式 / 主题键 / 语义）、影响分析、记忆体检 `scan`（M1+M2+M4） | |
 | 修正：预演、审批、应用、回滚（删除不可回滚） | 其他外部扫描工具的导入；memwall `forget-check` 的交叉校验 |
