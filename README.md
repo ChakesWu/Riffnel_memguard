@@ -162,7 +162,7 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 
 ## 作品介绍
 
-[docs/intro/Riffnel_memguard_作品介绍.pdf](docs/intro/Riffnel_memguard_作品介绍.pdf)（草稿；源文件 `docs/intro/content.html`，用 `python3 docs/intro/build.py` 重新生成，需要 playwright 与 pypdf）。
+[docs/intro/Riffnel_memguard_作品介绍.pdf](docs/intro/Riffnel_memguard_作品介绍.pdf)、[Word 版](docs/intro/Riffnel_memguard_作品介绍.docx)（草稿；源文件 `docs/intro/content.html`，用 `python3 docs/intro/build.py` 生成 PDF、`python3 docs/intro/build_docx.py` 生成 Word，需要 playwright、pypdf、bs4，Word 版另需 node 的 `docx` 包与 LibreOffice）。
 
 ## 治理与贡献
 
