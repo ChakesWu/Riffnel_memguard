@@ -98,7 +98,32 @@ riffnel-memguard verify plan_xxxx     # 重放与回归默认沿用 ask 时的�
 - 命令用 shlex 拆分后**不经过 shell** 执行，但它以你的权限运行，是受信任的配置，不要用不可信输入拼接。
 - 每次调用启动一个新进程，适合验收与回归，不适合高频调用。
 - 参考实现：`riffnel_memguard/agent/stdio_agent.py`（Python）与 `examples/agent_cmd/agent.js`（Node.js，与本项目代码无关，已完整跑通调查、修正、重放、回归）。
-- 目前只有命令行支持，Web 界面仍使用内置智能体。
+- Web 界面也可使用（侧栏「外部智能体」），但**默认关闭**：在网页里输入并执行命令等于对能访问该页面的任何人开放远程执行。仅在本机可信环境设置 `RIFFNEL_UI_ALLOW_AGENT_CMD=1` 后启用；关闭时，界面也不会执行命令行 `ask` 存下的外部命令（会提示改用命令行 `verify`）。
+
+## Letta 适配器（归档记忆）
+
+`LettaAdapter(client, agent_id)` 把一个 Letta 智能体的归档记忆（passages）当作记忆库。Letta 的 passage 只能新增、列出、搜索、删除，**不能修改，标签只能在创建时设置**，所以本项目把自己的字段放进标签（`rf_id`、`rf_status`、`rf_key`、`sc:<作用域键>=<值>` 等），停用、隔离、改作用域都是「先写入新 passage、再删除旧的」；逻辑 id 不变，Letta 的 passage id 会变。智能体自己写入的、不带标签的 passage 也能被列出（视为有效、无作用域，id 即 passage id）。
+
+```bash
+bash scripts/letta_test_env.sh              # 在 Ubuntu 上起一个测试用 Letta（见下文限制）
+pip install ".[agent,letta]"
+riffnel-memguard demo letta-stale
+riffnel-memguard demo letta-erasure         # 最后用 pg_dump 独立检查数据库里是否还有目标
+RIFFNEL_LETTA_URL=http://localhost:8283 pytest tests/test_letta.py
+```
+
+在 Letta 0.16.7（letta-client 1.10.x）上实测：
+- **列出使用游标分页**（`after`），到 `max_items` 会抛 `MemoryListingTruncated`，不会静默截断。
+- **用 `delete` 删除 passage 是硬删除**：删除后整库 `pg_dump` 中找不到文本（只检查了逻辑数据；表文件、WAL 等物理层未检查）。这与 Mem0 不同（Mem0 的历史库会留下被删文字）。
+- **删除智能体不会删除它的归档和归档记忆**（孤儿归档，文本仍在数据库里）；删除前要先 `archives.delete`。测试里有一个哨兵测试专门盯住这个行为，上游改了它就会失败；清理顺序要先列出归档（智能体删除后按智能体查归档会 404）。
+- 搜索结果只有顺序、没有相似度分数，适配器用排名派生的分数（1/(1+排名)）。
+- 在这个环境里，两个演示场景（过期、删除）各跑通 1 次，6 项适配器集成测试通过；**没有对 Letta 做过真实模型或真实嵌入器的多次验证**（嵌入用本机的哈希嵌入替身服务，LLM 不会被调用）。
+
+限制：
+- **测试环境不是受支持的部署方式。** Letta 0.16.7 的 wheel 需要发布当日的依赖版本（`uv --exclude-newer`）、PostgreSQL 与 pgvector，且不带数据库迁移文件，脚本里用 Letta 自己的 ORM 模型建表并手动补一个序列默认值。生产环境应使用 Letta 官方的部署与迁移。
+- **持续集成里没有 Letta 服务端**，`tests/test_letta.py` 在 CI 中被跳过。
+- 只覆盖归档记忆；核心记忆块、会话消息、文件不在范围内。单条查找需要扫描全部 passage（O(n)）。
+- 只在 letta-client 1.10.x + 服务端 0.16.x 上测试，其他版本会发出警告。
 
 ## SQLite 适配器
 
@@ -171,8 +196,8 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 
 | 已实现 | 未实现 |
 |---|---|
-| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、**SQLite 适配器**、**Mem0 适配器**、规则抽取、字符 n-gram TF-IDF 检索 | Letta 适配器（见 docs/INTEGRATION.md）；Web 界面接入外部智能体 |
-| `--agent-cmd`：任意语言的外部智能体（含 Node.js 实例）接入重放与回归 | |
+| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、**SQLite 适配器**、**Mem0 适配器**、**Letta 适配器**、规则抽取、字符 n-gram TF-IDF 检索 | Letta 的真实模型与真实嵌入器验证；Letta 核心记忆块与会话消息；CI 中的 Letta 服务端 |
+| `--agent-cmd`：任意语言的外部智能体（含 Node.js 实例）接入重放与回归；Web 界面可接入（默认关闭） | |
 | Pydantic AI 企业客服智能体 + 检索追踪（真实 DeepSeek 模型下 `real-stale` 已验证；离线替身用于 CI） | M2、M3 的真实模型验证；更多嵌入模型 |
 | 调查：M1 过期、M2 冲突、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | 向量相似度（仅字符 n-gram）、LLM 抽取 |
 | 溯源链接（显式 / 主题键 / 语义）、影响分析、记忆体检 `scan`（M1+M2+M4） | |

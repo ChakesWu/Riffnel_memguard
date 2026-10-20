@@ -8,6 +8,7 @@ from pathlib import Path
 import streamlit as st
 
 from riffnel_memguard import service
+from riffnel_memguard.agent.command import AgentCommandError
 from riffnel_memguard.core.workspace import Workspace
 from riffnel_memguard.report.markdown import mask_text
 
@@ -33,9 +34,28 @@ def workspace() -> Workspace:
 def guarded(fn, *a):
     try:
         return fn(*a)
-    except (KeyError, ValueError, PermissionError) as e:
+    except (KeyError, ValueError, PermissionError, AgentCommandError) as e:
         st.error(str(e).strip("'"))
         return None
+
+
+def external_allowed() -> bool:
+    """Running a command typed into a web page is remote code execution for anyone who can reach the page, so it is
+    off unless the operator sets RIFFNEL_UI_ALLOW_AGENT_CMD=1 (only do this on a trusted, local deployment)."""
+    return os.environ.get("RIFFNEL_UI_ALLOW_AGENT_CMD") == "1"
+
+
+def agent_settings() -> tuple[str | None, float]:
+    """Sidebar: the external agent command used for new questions and for probes. Returns (command, timeout)."""
+    st.sidebar.markdown("**外部智能体（可选）**")
+    if not external_allowed():
+        st.sidebar.caption("Web 界面默认不执行外部命令（防止远程执行）。在本机可信环境设置 "
+                           "RIFFNEL_UI_ALLOW_AGENT_CMD=1 后启用；命令行 `--agent-cmd` 不受此限制。")
+        return None, 60.0
+    cmd = st.sidebar.text_input("命令（留空使用内置示例智能体）", key="agent_cmd",
+                                help='协议见 README：标准输入一行 JSON，标准输出最后一行 JSON')
+    timeout = st.sidebar.number_input("每次调用超时（秒）", min_value=1.0, value=60.0, key="agent_timeout")
+    return (cmd.strip() or None), float(timeout)
 
 
 def plan_panel(w: Workspace, plan_id: str) -> None:
@@ -52,8 +72,14 @@ def plan_panel(w: Workspace, plan_id: str) -> None:
         if guarded(service.apply, w, plan_id) is None and service.get_plan(w.state(), plan_id)["status"] == "applied":
             st.rerun()
     if c3.button("验证", key=f"verify_{plan_id}"):
-        guarded(service.verify, w, plan_id, ["我的手机号是多少？"])
-        st.rerun()
+        stored = state["incidents"].get(p.get("incident_id") or "", {}).get("agent_cmd")
+        cmd, timeout = agent_settings_cache()
+        if (stored or cmd) and not external_allowed():
+            st.warning("该方案的验证需要执行外部智能体命令，Web 界面默认不执行（设置 RIFFNEL_UI_ALLOW_AGENT_CMD=1 启用，"
+                       "或改用命令行 verify）。")
+        else:
+            guarded(service.verify, w, plan_id, ["我的手机号是多少？"], cmd, timeout if cmd else None)
+            st.rerun()
     if c4.button("回滚", key=f"rollback_{plan_id}") and by:
         skipped = service.rollback(w, plan_id, by)
         st.info(f"无法回滚的删除：{skipped}" if skipped else "已回滚")
@@ -81,6 +107,13 @@ def page_overview(w: Workspace) -> None:
                       for k, v in state["plans"].items()], use_container_width=True)
 
 
+def agent_settings_cache() -> tuple[str | None, float]:
+    if not external_allowed():
+        return None, 60.0
+    cmd = (st.session_state.get("agent_cmd") or "").strip() or None
+    return cmd, float(st.session_state.get("agent_timeout", 60.0))
+
+
 def page_incident(w: Workspace) -> None:
     st.header("事故调查")
     with st.form("ask"):
@@ -88,13 +121,17 @@ def page_incident(w: Workspace) -> None:
         sc = st.text_input("作用域 (key=value, 逗号分隔)", "product=gold_card")
         at = st.text_input("事故日期", "2026-08-10")
         if st.form_submit_button("提问并记录事故"):
-            iid = service.ask(w, q, service._parse_scope([x.strip() for x in sc.split(",") if x.strip()]), at)
-            st.session_state["iid"] = iid
+            cmd, timeout = agent_settings_cache()
+            iid = guarded(service.ask, w, q, service._parse_scope([x.strip() for x in sc.split(",") if x.strip()]),
+                          at, cmd, timeout)
+            if iid:
+                st.session_state["iid"] = iid
     incidents = w.state()["incidents"]
     if not incidents:
         return
     iid = st.selectbox("事故", list(incidents), index=list(incidents).index(st.session_state.get("iid", list(incidents)[-1])))
     inc = incidents[iid]
+    st.caption("智能体：" + (f"外部命令 `{inc['agent_cmd']}`" if inc.get("agent_cmd") else "内置示例智能体"))
     st.write(f"问：{mask_text(inc['question'])}")
     st.write(f"答：{mask_text(inc['answer'])}　取用记忆：{inc['retrieved_ids']}")
     if st.button("调查"):
@@ -169,6 +206,7 @@ def main() -> None:
     pages = {"总览": page_overview, "事故调查": page_incident, "删除请求": page_erasure,
              "来源更新": page_revalidate, "审计链": page_audit}
     choice = st.sidebar.radio("页面", list(pages))
+    agent_settings()
     pages[choice](w)
 
 

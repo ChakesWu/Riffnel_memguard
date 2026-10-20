@@ -185,7 +185,7 @@ def report(plan_id: str, ws: Path = WS_OPT):
 
 
 @app.command()
-def demo(scenario: str = typer.Argument(..., help="stale | erasure | sqlite-stale | sqlite-erasure | real-stale | real-erasure"),
+def demo(scenario: str = typer.Argument(..., help="stale | erasure | sqlite-* | real-* (Mem0) | letta-* (needs a running Letta server)"),
          workdir: Path = typer.Option(None, help="Where to write working files (default: temp dir)")):
     """Run a full offline demo on simulated data."""
     runner = {"stale": demo_mod.run_stale, "erasure": demo_mod.run_erasure}.get(scenario)
@@ -198,13 +198,20 @@ def demo(scenario: str = typer.Argument(..., help="stale | erasure | sqlite-stal
         except ImportError as e:
             raise typer.BadParameter(f'real-stack demos need extras: pip install ".[mem0,agent]" ({e})')
         runner = {"real-stale": demo_real.run_stale, "real-erasure": demo_real.run_erasure}.get(scenario)
+    if scenario.startswith("letta-"):
+        try:
+            from . import demo_real
+        except ImportError as e:
+            raise typer.BadParameter(f'Letta demos need extras: pip install ".[agent,letta]" ({e})')
+        base = {"letta-stale": demo_real.run_stale, "letta-erasure": demo_real.run_erasure}.get(scenario)
+        runner = (lambda wd: base(wd, backend="letta")) if base else None
     if runner is None:
-        raise typer.BadParameter("scenario must be stale, erasure, sqlite-stale, sqlite-erasure, real-stale or real-erasure")
+        raise typer.BadParameter("scenario must be stale, erasure, sqlite-stale, sqlite-erasure, real-stale, real-erasure, letta-stale or letta-erasure")
     wd = workdir or Path(tempfile.mkdtemp(prefix="riffnel_"))
     try:
         result = runner(wd)
     except Exception as e:  # real-stack demos call an external model; show the cause, not a stack trace
-        if not scenario.startswith("real-"):
+        if not scenario.startswith(("real-", "letta-")):
             raise
         typer.echo(f"\n真实堆栈运行失败：{type(e).__name__}: {str(e)[:300]}\n"
                    "可能原因：模型（RIFFNEL_AGENT_MODEL 与密钥环境变量）、嵌入器（RIFFNEL_EMBEDDER=fastembed 需要下载模型）"

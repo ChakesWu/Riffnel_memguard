@@ -34,16 +34,15 @@
 | pydantic-ai-slim | Python ≥ 3.11：`>=2.58,<3`；Python 3.10：`>=2.54,<2.55`（2.55 起要求 Python 3.11） | 本机 2.58.0（Python 3.13）；3.10 上 2.54 由 CI 运行 |
 | fastembed | `>=0.9,<0.10` | 0.9.0 |
 | memwall | `>=0.6.1,<0.7` | 0.6.1 |
+| letta-client | `>=1.10,<1.11` | 1.10.3（客户端）；Letta 服务端 0.16.7（适配器启动时检查） |
 
 范围是「已测试版本所在的小版本」，不代表该范围内的每个版本都测过。
 
-## Letta：未实现（2026-10-20 尝试结果）
+## Letta：已实现（2026-10-20）
 
-- `letta-client` 1.12.1（Apache-2.0）可安装，接口含 `blocks`（create/list/retrieve/update/delete）与 `agents.passages`。
-- 要测试适配器必须有 Letta 服务端。最新 `letta` 0.34.12 的 `letta server` 已变成连接 Letta Cloud 的接收端，不是本地 REST 服务。
-- 改装 `letta==0.16.7`（仍带本地 REST）：依赖在 2026 年的环境里已漂移，依次缺 `asyncpg`、`mcp.shared.exceptions.McpError`（新版 `mcp` 已改名）、`fastmcp` 客户端、`IdentityAssertionParams`，连续 5 次尝试仍无法启动。
-- 即使启动，创建智能体、写入归档记忆（passages）还需要 LLM 与嵌入服务，当前网络白名单不允许。
-- 因此**没有写 Letta 适配器**：没有真实运行过的适配器不应作为「已支持」交付。下一步需要：固定一组可用的依赖版本，或使用 Letta Cloud 账号并放行其域名。
+- `letta-client` 1.10.x（Apache-2.0）。归档记忆的接口：`agents.passages` 的 create / list（游标 `after`）/ delete / search；没有修改。适配器设计与实测发现见 README「Letta 适配器」一节。
+- 此前（同日）本地服务端无法启动：最新 `letta` 0.34.12 的 `letta server` 已变成连接 Letta Cloud 的接收端；0.16.7 在今天的依赖环境中缺 `asyncpg`、`mcp` 改名等。后来用 `uv --exclude-newer 2026-04-01` 还原发布当日的依赖，补装 PostgreSQL 16 与 pgvector，并用 Letta 自己的 ORM 建表，才在本机跑起来。步骤固化在 `scripts/letta_test_env.sh`。
+- 嵌入用本机 OpenAI 兼容的哈希嵌入替身（`riffnel_memguard.adapters.letta_testkit`）；LLM 配置是占位，从未被调用。Letta Cloud（api.letta.com）在开发环境中不可达，未测试。
 
 ## 建议顺序
 

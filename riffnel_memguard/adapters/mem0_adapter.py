@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from ..core.models import MemoryRecord, scope_compatible
+from .base import MemoryListingTruncated  # noqa: F401  (re-exported for callers)
 
 TRACE = "trace:"
 TESTED_MEM0_PREFIX = "2.2."  # mem0ai 2.2.x is what this adapter was run against; other versions may change the API

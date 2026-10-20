@@ -11,6 +11,10 @@ from sklearn.metrics.pairwise import cosine_similarity
 from ..core.models import MemoryRecord, scope_compatible
 
 
+class MemoryListingTruncated(RuntimeError):
+    """A store returned as many memories as the limit allows, so the listing may be incomplete."""
+
+
 class MemoryStoreAdapter(Protocol):
     name: str
 

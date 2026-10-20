@@ -11,7 +11,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - run: pip install -e ".[dev,ui,memwall,mem0,agent]"
+      - run: pip install -e ".[dev,ui,memwall,mem0,agent,letta]"
       - run: pytest
       - run: riffnel-memguard demo stale
       - run: riffnel-memguard demo erasure
