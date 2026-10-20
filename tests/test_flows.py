@@ -110,3 +110,30 @@ def test_audit_log_never_contains_erased_values(tmp_path):
 
 def test_mask():
     assert mask("13800000000") == "138****0000"
+
+
+def test_chinese_numerals_are_extracted(tmp_path):
+    from riffnel_memguard.extract.rules import cn_to_int
+    assert [cn_to_int(x) for x in ["六", "十", "十二", "二十", "二十三", "一百零五", "两"]] == [6, 10, 12, 20, 23, 105, 2]
+    _, clauses, _ = setup(tmp_path)
+    assert [(c.key, c.value) for c in extract_claims("金卡免年费需要每年刷满六笔。", clauses)] == [
+        ("credit_card.gold.annual_fee.waiver_min_txn", 6)]
+
+
+def test_erasure_normalization_catches_numerals_and_obfuscated_email():
+    from riffnel_memguard.probes.erasure import normalize
+    assert "13800000000" in normalize("一三八零零零零零零零零")
+    assert normalize("user1234 at example dot com") == normalize("user1234@example.com")
+    assert normalize("User1234[at]example[dot]com") == normalize("user1234@example.com")
+
+
+def test_semantic_layer_is_advisory(tmp_path):
+    from riffnel_memguard.adapters.base import JsonFileStore
+    from riffnel_memguard.agent.bank import BankAssistAgent
+    from riffnel_memguard.core.models import MemoryRecord
+    from riffnel_memguard.probes.erasure import run_probe
+    store = JsonFileStore(tmp_path / "m.json")
+    store.add(MemoryRecord(id="near", content="回访摘要：客户张三留有手机号13800000001，已回访。", scope={"user": "u"}))
+    res = run_probe(store, BankAssistAgent(store), {"user": "u"}, ["13800000000"],
+                    "客户张三的手机号 13800000000", ["我的手机号是多少？"])
+    assert res["L3_semantic"] and res["needs_review"] and res["clean"]  # flagged for review, not failed

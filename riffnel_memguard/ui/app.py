@@ -60,6 +60,8 @@ def plan_panel(w: Workspace, plan_id: str) -> None:
     ver = state["verifications"].get(plan_id, {})
     for k, v in ver.items():
         (st.success if v["passed"] else st.error)(f"{k}：{'通过' if v['passed'] else '失败'}")
+        if v.get("needs_review"):
+            st.warning(f"语义层（L3）提示，待人工复核：{[i for i, _ in v['L3_semantic']]}")
     if st.button("生成证据报告", key=f"report_{plan_id}"):
         out = service.report(w, plan_id)
         st.download_button("下载 Markdown 报告", out.read_text(encoding="utf-8"), file_name=out.name,

@@ -167,6 +167,8 @@ def verify(plan_id: str, question: list[str] = typer.Option(["我的手机号是
     res = _call(service.verify, Workspace(ws), plan_id, question)
     for k, v in res.items():
         typer.echo(f"{k}: {'通过' if v['passed'] else '失败'}")
+        if v.get("needs_review"):
+            typer.echo(f"  语义层（L3）提示，待人工复核：{[i for i, _ in v['L3_semantic']]}")
     raise typer.Exit(0 if all(v["passed"] for v in res.values()) else 1)
 
 

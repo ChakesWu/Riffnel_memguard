@@ -10,6 +10,7 @@ from .adapters.base import JsonFileStore
 from .agent.bank import BankAssistAgent
 from .core.audit import AuditLog
 from .core.models import Clause, Incident, MemoryRecord, TestCase
+from .adapters.base import similarity
 from .engines import corrector, investigator, linker, verifier
 
 
@@ -70,10 +71,12 @@ def run_erasure(case, tmp: Path) -> dict:
     args = (case["subject"], case["targets"], case["description"], case["questions"])
     pre = verifier.erasure(store, agent, *args[:1], *args[1:])
     exp = case["expect"]
-    r = {"id": case["id"], "kind": case["kind"], "hard": case["hard"],
+    r = {"id": case["id"], "kind": case["kind"], "hard": case["hard"], "l3_flag": bool(pre["L3_semantic"]),
          "layers": [k for k in ("L1_exact", "L2_variant", "L3_semantic", "L4_behavior") if pre[k]]}
     findings = investigator.investigate_erasure(store, case["targets"])
     r["located"] = sorted(f.memory_id for f in findings)
+    live = [m.content for m in store.list() if m.status != "deleted"]
+    r["l3_max"] = round(max(similarity(case["description"], live)), 3) if live else 0.0
     if not exp["detect"]:
         r["no_false_alarm"] = pre["clean"]
         return r
@@ -110,6 +113,7 @@ def render(res: dict) -> str:
     er = [r for r in rows if r["kind"].startswith("ERASURE")]
     easy = [r for r in er if not r["hard"]]
     hard = [r for r in er if r["hard"]]
+    near = [r for r in er if r["kind"].endswith("NEARMISS")]
     L = ["# 基准结果（仿真）", "",
          f"Riffnel_memguard {res['version']}，{res['n_cases']} 个用例；由 `riffnel-memguard benchmark` 生成，数字均来自该次运行。", "",
          "**读数前提：** 数据为仿真，由项目维护者自行设计；事故回答由有问题的记忆脚本化生成（只有修正后的重放用真实检索）。"
@@ -128,13 +132,23 @@ def render(res: dict) -> str:
     for k in sorted({r["kind"] for r in inc}):
         g = [r for r in inc if r["kind"] == k]
         L.append(f"| {k}（{len(g)}） | {_rate(g, 'attributed')} | {_rate(g, 'class_ok')} | {_rate(g, 'replay_ok')} | {_rate(g, 'no_false_alarm')} |")
-    L += ["", "## 删除残留探测", "", "| 指标 | 结果 |", "|---|---|",
-          f"| 召回：有残留的用例被探测到（常规） | {_rate(easy, 'detected')} |",
+    pos = [r for r in er if "located_ok" in r]
+    neg = [r for r in er if "no_false_alarm" in r]
+    L += ["", "## 删除残留探测", "",
+          "L1 精确、L2 变形、L4 行为为硬性关卡；L3 语义层只提示「待人工复核」，不单独决定是否通过。", "",
+          "| 指标 | 结果 |", "|---|---|",
+          f"| 召回：有残留的用例被硬性关卡探测到（常规） | {_rate(easy, 'detected')} |",
           f"| 定位：残留记录被准确指出（常规） | {_rate(easy, 'located_ok')} |",
-          f"| 修正后四层均无命中（常规） | {_rate(easy, 'clean_after')} |",
-          f"| 误报：无残留用例被误判有残留 | {_rate(er, 'no_false_alarm')} |",
+          f"| 修正后硬性关卡均无命中（常规） | {_rate(easy, 'clean_after')} |",
+          f"| 误报：无残留用例（含近似号码）被硬性关卡误判有残留 | {_rate(er, 'no_false_alarm')} |",
           f"| 困难用例（中文数字、邮箱混淆）被探测到 | {_rate(hard, 'detected')} |",
-          f"| 困难用例残留被准确定位 | {_rate(hard, 'located_ok')} |", ""]
+          f"| 困难用例残留被准确定位 | {_rate(hard, 'located_ok')} |",
+          f"| L3 提示：有残留的用例 | {sum(r['l3_flag'] for r in pos)}/{len(pos)} |",
+          f"| L3 提示：无残留的用例（即 L3 的误报） | {sum(r['l3_flag'] for r in neg)}/{len(neg)} |"]
+    if near:
+        L.append(f"| 近似号码用例（{len(near)} 个）L3 最高得分范围（阈值 0.4） | "
+                 f"{min(r['l3_max'] for r in near):.2f}–{max(r['l3_max'] for r in near):.2f} |")
+    L.append("")
     bad = []
     for r in rows:
         fails = [k for k in ("link_ok", "attributed", "class_ok", "no_false_alarm", "replay_ok", "no_degradation", "derived_purged",

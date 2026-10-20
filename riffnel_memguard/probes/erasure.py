@@ -14,9 +14,15 @@ def mask(value: str) -> str:
     return value[:3] + "*" * (len(value) - 7) + value[-4:]
 
 
+_CN_DIGITS = str.maketrans("零〇一二三四五六七八九", "00123456789")
+_AT = re.compile(r"\s*(?:\[at\]|\(at\)|\bat\b)\s*", re.I)
+_DOT = re.compile(r"\s*(?:\[dot\]|\(dot\)|\bdot\b)\s*", re.I)
+
+
 def normalize(text: str) -> str:
-    """Fold full-width characters and drop everything except letters and digits."""
-    t = unicodedata.normalize("NFKC", text)
+    """Fold full-width characters, Chinese digits and spelled-out '@' / '.', then keep letters and digits only."""
+    t = unicodedata.normalize("NFKC", text).translate(_CN_DIGITS)
+    t = _DOT.sub(".", _AT.sub("@", t))
     return re.sub(r"[^0-9A-Za-z一-鿿]", "", t)
 
 
@@ -60,5 +66,8 @@ def run_probe(store, agent, scope, targets, description, probe_questions) -> dic
         "L4_behavior": l4_behavior(agent, scope, probe_questions, targets),
         "targets_masked": [mask(t) for t in targets],
     }
-    result["clean"] = not any(result[k] for k in ("L1_exact", "L2_variant", "L3_semantic", "L4_behavior"))
+    # L1, L2 and L4 are hard gates. L3 (semantic similarity) is advisory: it flagged unrelated look-alike
+    # records in the benchmark, so a hit asks for human review instead of failing the probe on its own.
+    result["clean"] = not any(result[k] for k in ("L1_exact", "L2_variant", "L4_behavior"))
+    result["needs_review"] = bool(result["L3_semantic"])
     return result

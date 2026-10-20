@@ -28,6 +28,15 @@ CHANGE, OCCURRED, AS_OF = "2026-07-01", "2026-08-10", "2026-09-01"
 NAMES = ["赵一", "钱二", "孙三", "李四", "周五", "吴六", "郑七", "王八", "冯九", "陈十"]
 
 
+def cn(n: int) -> str:
+    d = "零一二三四五六七八九"
+    if n < 10:
+        return d[n]
+    if n < 20:
+        return "十" + (d[n % 10] if n % 10 else "")
+    return d[n // 10] + "十" + (d[n % 10] if n % 10 else "")
+
+
 def text(prod, t, v):
     return f"{prod}{t[1]}{v}{t[2]}{t[3]}。"
 
@@ -121,6 +130,10 @@ def incident_case(b: Builder, cid, kind, idx, expect, **kw):
         inc["answer"] = "好的，无需任何条件，免费办理。"
         case["strict_replay"] = False
         case["expect"]["not_retrieved"] = "m_bad"
+    elif kind == "M1_numeral":
+        word = f"{cn(old)}"
+        ms[0] = b.memory("m_bad", f"{tgt}{t[1]}{word}{t[2]}{t[3]}。", scope_t)  # no key/value: must be read from the text
+        inc["answer"] = f"{tgt}{t[1]}{word}{t[2]}{t[3]}。"
     elif kind == "M2":
         u = next(x for x in range(41, 60))
         ms[0] = b.memory("m_bad", text(tgt, t, u), scope_t, f"card.{tgt}.{t[0]}", u)
@@ -209,7 +222,8 @@ def generate():
             ("M3", 6, {"cls": "M3", "ids": ["m_leak"]}), ("M4", 4, {"cls": "M4", "ids": ["m_bad"]}),
             ("M6", 3, {"cls": "M6", "ids": ["m_bad"]}), ("NEG_current", 3, {"cls": None}),
             ("NEG_historic", 3, {"cls": None}), ("UNATTRIBUTABLE", 4, {"cls": None}),
-            ("M2", 4, {"cls": "M2", "ids": ["m_bad"]})]
+            ("M2", 4, {"cls": "M2", "ids": ["m_bad"]}),
+            ("M1_numeral", 4, {"cls": "M1", "ids": ["m_bad"]})]
     for kind, count, expect in plan:
         for j in range(count):
             n += 1
@@ -223,9 +237,10 @@ def generate():
     for field, style in [("phone", "numerals"), ("email", "obfuscated")]:
         n += 1
         add(erasure_case(b, f"c{n:03d}_ERASURE_HARD", field, style, n, hard=True))
-    for neg in ["clean"] * 3 + ["nearmiss"] * 3:
+    fields = ["phone", "idcard", "card"]
+    for k, neg in enumerate(["clean"] * 3 + ["nearmiss"] * 9):
         n += 1
-        add(erasure_case(b, f"c{n:03d}_ERASURE_{neg.upper()}", "phone", "exact", n, negative=neg))
+        add(erasure_case(b, f"c{n:03d}_ERASURE_{neg.upper()}", fields[k % 3], "exact", n, negative=neg))
     return cases
 
 

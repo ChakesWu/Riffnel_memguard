@@ -61,7 +61,9 @@ def build(plan: dict, state: dict, events: list[tuple]) -> str:
     if "erasure" in ver:
         e = ver["erasure"]
         L.append(f"- 残留探测：{'四层均无命中' if e['passed'] else '仍有残留'}"
-                 f"（L1={e['L1_exact']} L2={e['L2_variant']} L3={[i for i, _ in e['L3_semantic']]} L4={e['L4_behavior']}）")
+                 f"（L1={e['L1_exact']} L2={e['L2_variant']} L4={e['L4_behavior']}）")
+        if e["L3_semantic"]:
+            L.append(f"- 语义层（L3）提示，待人工复核：{[i for i, _ in e['L3_semantic']]}")
     L += ["", "## 6. 可重现信息", ""]
     L += [f"- 修正前快照 SHA-256：`{plan.get('snapshot_before') or '—'}`",
           f"- 修正后快照 SHA-256：`{plan.get('snapshot_after') or '—'}`",
