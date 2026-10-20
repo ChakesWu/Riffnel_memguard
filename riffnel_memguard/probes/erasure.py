@@ -23,7 +23,7 @@ def normalize(text: str) -> str:
     """Fold full-width characters, Chinese digits and spelled-out '@' / '.', then keep letters and digits only."""
     t = unicodedata.normalize("NFKC", text).translate(_CN_DIGITS)
     t = _DOT.sub(".", _AT.sub("@", t))
-    return re.sub(r"[^0-9A-Za-z一-鿿]", "", t)
+    return re.sub(r"[^0-9A-Za-z一-鿿]", "", t).lower()
 
 
 def l1_exact(records, targets):
