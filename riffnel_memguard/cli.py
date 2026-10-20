@@ -9,12 +9,10 @@ from typing import Optional
 import typer
 
 from . import demo as demo_mod
-from .agent.bank import BankAssistAgent
+from . import service
 from .core.audit import AuditLog
-from .core.models import Incident, Plan
 from .core.workspace import Workspace
-from .engines import corrector, investigator, verifier
-from .report.markdown import build, mask_text
+from .report.markdown import mask_text
 
 app = typer.Typer(help="Riffnel_memguard: memory error investigation and correction verification.")
 audit_app = typer.Typer(help="Audit log commands.")
@@ -24,21 +22,14 @@ WS_OPT = typer.Option(Path(os.environ.get("RIFFNEL_WS", ".riffnel")), "--ws", he
 
 
 def _scope(items: list[str]) -> dict:
-    return dict(i.split("=", 1) for i in items)
+    return service._parse_scope(items)
 
 
-def _plan(st: dict, plan_id: str) -> dict:
-    if plan_id not in st["plans"]:
-        raise typer.BadParameter(f"unknown plan {plan_id}")
-    return st["plans"][plan_id]
-
-
-def _as_plan(p: dict) -> Plan:
-    return Plan(**{k: p[k] for k in ("id", "incident_id", "actions", "status", "approved_by")})
-
-
-def _sync(p: dict, plan: Plan) -> None:
-    p.update(plan.model_dump(include={"actions", "status", "approved_by"}))
+def _call(fn, *a, **k):
+    try:
+        return fn(*a, **k)
+    except (KeyError, ValueError, PermissionError) as e:
+        raise typer.BadParameter(str(e).strip("'"))
 
 
 @app.command()
@@ -52,24 +43,15 @@ def init(ws: Path = WS_OPT, example: bool = typer.Option(True, help="Copy the si
 def ask(question: str, scope: list[str] = typer.Option(..., "--scope", help="key=value, repeatable"),
         at: str = typer.Option(..., help="Incident date, YYYY-MM-DD"), ws: Path = WS_OPT):
     """Ask the reference agent and record the exchange as an incident."""
-    w, sc = Workspace(ws), _scope(scope)
-    answer, retrieved = BankAssistAgent(w.store).answer(question, sc)
-    st = w.state()
-    iid = f"inc_{len(st['incidents']) + 1:03d}"
-    st["incidents"][iid] = Incident(id=iid, occurred_at=at, agent_id="bank-bot", scope=sc, question=question,
-                                    answer=answer, retrieved_ids=retrieved).model_dump()
-    w.save_state(st)
-    typer.echo(f"{iid}\n答：{answer}")
+    w = Workspace(ws)
+    iid = service.ask(w, question, _scope(scope), at)
+    typer.echo(f"{iid}\n答：{w.state()['incidents'][iid]['answer']}")
 
 
 @app.command()
 def investigate(incident_id: str, ws: Path = WS_OPT):
     """Find the memories responsible for a wrong answer."""
-    w, st = Workspace(ws), Workspace(ws).state()
-    inc = Incident(**st["incidents"][incident_id])
-    findings = investigator.investigate(inc, w.store, w.clauses)
-    st["incidents"][incident_id]["findings"] = [f.model_dump() for f in findings]
-    w.save_state(st)
+    findings = _call(service.investigate, Workspace(ws), incident_id)
     if not findings:
         typer.echo("无法归因：错误不来自被取用的记忆（请检查提示词或模型层）。")
     for f in findings:
@@ -80,31 +62,14 @@ def investigate(incident_id: str, ws: Path = WS_OPT):
 def plan(incident_id: str, as_of: str = typer.Option(..., help="Date the correction should be valid at"),
          ws: Path = WS_OPT):
     """Draft a correction plan from an incident's findings."""
-    from .core.models import Finding
-    w, st = Workspace(ws), Workspace(ws).state()
-    fs = [Finding(**f) for f in st["incidents"][incident_id].get("findings", [])]
-    if not fs:
-        raise typer.BadParameter("no findings; run investigate first")
-    p = corrector.make_plan(fs, w.store, incident_id, {c.key: c for c in w.clauses}, as_of)
-    w.audit.append("system", "plan", "plan", p.id)
-    st["plans"][p.id] = {**p.model_dump(), "findings": [f.model_dump() for f in fs], "as_of": as_of}
-    w.save_state(st)
-    typer.echo(p.id)
+    typer.echo(_call(service.plan_incident, Workspace(ws), incident_id, as_of))
 
 
 @app.command()
 def revalidate(as_of: str = typer.Option(...), ws: Path = WS_OPT):
     """After a source update: find active memories that still hold a superseded value."""
-    w, st = Workspace(ws), Workspace(ws).state()
-    fs = investigator.revalidate(w.store, w.clauses, as_of)
-    if not fs:
-        typer.echo("没有依赖旧版本的有效记忆。")
-        return
-    p = corrector.make_plan(fs, w.store, None, {c.key: c for c in w.clauses}, as_of)
-    w.audit.append("system", "plan", "plan", p.id)
-    st["plans"][p.id] = {**p.model_dump(), "findings": [f.model_dump() for f in fs], "as_of": as_of}
-    w.save_state(st)
-    typer.echo(f"{len(fs)} 条记忆过期，方案 {p.id}")
+    fs, pid = service.revalidate(Workspace(ws), as_of)
+    typer.echo(f"{len(fs)} 条记忆过期，方案 {pid}" if fs else "没有依赖旧版本的有效记忆。")
 
 
 @app.command()
@@ -113,22 +78,8 @@ def erase(subject: list[str] = typer.Option(..., "--subject", help="key=value sc
           description: str = typer.Option("", help="Text used for the semantic probe"),
           ws: Path = WS_OPT):
     """Register an erasure request, look for residue, and draft a plan."""
-    from .probes.erasure import mask
-    w, st = Workspace(ws), Workspace(ws).state()
-    eid = f"er_{len(st['erasures']) + 1:03d}"
-    fs = investigator.investigate_erasure(w.store, target)
-    w.audit.append("system", "erasure_request", "subject", ",".join(subject))
-    st["erasures"][eid] = {"id": eid, "subject": _scope(subject), "targets": target, "description": description,
-                           "targets_masked": [mask(t) for t in target]}
-    if not fs:
-        w.save_state(st)
-        typer.echo("未发现残留。")
-        return
-    p = corrector.make_plan(fs, w.store, None, {}, "")
-    w.audit.append("system", "plan", "plan", p.id)
-    st["plans"][p.id] = {**p.model_dump(), "findings": [f.model_dump() for f in fs], "as_of": "", "erasure_id": eid}
-    w.save_state(st)
-    typer.echo(f"发现 {len(fs)} 处残留，方案 {p.id}")
+    fs, pid = service.erase(Workspace(ws), _scope(subject), target, description)
+    typer.echo(f"发现 {len(fs)} 处残留，方案 {pid}" if fs else "未发现残留。")
 
 
 @app.command("simulate-delete")
@@ -143,69 +94,32 @@ def simulate_delete(memory_id: str, ws: Path = WS_OPT):
 @app.command()
 def diff(plan_id: str, ws: Path = WS_OPT):
     """Dry run: show what the plan would change."""
-    w, st = Workspace(ws), Workspace(ws).state()
-    for line in corrector.diff(_as_plan(_plan(st, plan_id)), w.store):
+    for line in _call(service.diff, Workspace(ws), plan_id):
         typer.echo(mask_text(line))
 
 
 @app.command()
 def approve(plan_id: str, by: str = typer.Option(...), ws: Path = WS_OPT):
-    w, st = Workspace(ws), Workspace(ws).state()
-    p = _plan(st, plan_id)
-    obj = _as_plan(p)
-    corrector.approve(obj, by, w.audit)
-    _sync(p, obj)
-    w.save_state(st)
+    _call(service.approve, Workspace(ws), plan_id, by)
     typer.echo(f"{plan_id} 已由 {by} 审批")
 
 
 @app.command()
 def apply(plan_id: str, ws: Path = WS_OPT):
-    w, st = Workspace(ws), Workspace(ws).state()
-    p = _plan(st, plan_id)
-    obj = _as_plan(p)
-    store = w.store
-    p["snapshot_before"] = verifier.snapshot_sha(store)
-    try:
-        corrector.apply(obj, store, w.audit)
-    except PermissionError as e:
-        raise typer.BadParameter(str(e))
-    p["snapshot_after"] = verifier.snapshot_sha(store)
-    _sync(p, obj)
-    w.save_state(st)
+    _call(service.apply, Workspace(ws), plan_id)
     typer.echo(f"{plan_id} 已应用")
 
 
 @app.command()
 def rollback(plan_id: str, by: str = typer.Option(...), ws: Path = WS_OPT):
-    w, st = Workspace(ws), Workspace(ws).state()
-    p = _plan(st, plan_id)
-    obj = _as_plan(p)
-    skipped = corrector.rollback(obj, w.store, w.audit, by)
-    _sync(p, obj)
-    w.save_state(st)
+    skipped = _call(service.rollback, Workspace(ws), plan_id, by)
     typer.echo(f"已回滚；无法回滚的删除：{skipped}" if skipped else "已回滚")
 
 
 @app.command()
 def verify(plan_id: str, question: list[str] = typer.Option(["我的手机号是多少？"], "--question"), ws: Path = WS_OPT):
     """Run replay + regression (incident plans) or the four-layer probe (erasure plans)."""
-    w, st = Workspace(ws), Workspace(ws).state()
-    p = _plan(st, plan_id)
-    agent, res = BankAssistAgent(w.store), {}
-    if p.get("incident_id"):
-        inc = Incident(**{k: v for k, v in st["incidents"][p["incident_id"]].items() if k != "findings"})
-        res["replay"] = verifier.replay(agent, inc, w.clauses, p["as_of"])
-        res["regression"] = verifier.regression(agent, w.tests, {f["evidence"]["key"] for f in p["findings"] if "key" in f["evidence"]})
-    elif p.get("erasure_id"):
-        er = st["erasures"][p["erasure_id"]]
-        res["erasure"] = verifier.erasure(w.store, agent, er["subject"], er["targets"], er["description"], question)
-    else:
-        affected = {f["evidence"]["key"] for f in p["findings"] if "key" in f["evidence"]}
-        res["regression"] = verifier.regression(agent, w.tests, affected)
-    st["verifications"][plan_id] = res
-    w.save_state(st)
-    w.audit.append("system", "verify", "plan", plan_id)
+    res = _call(service.verify, Workspace(ws), plan_id, question)
     for k, v in res.items():
         typer.echo(f"{k}: {'通过' if v['passed'] else '失败'}")
     raise typer.Exit(0 if all(v["passed"] for v in res.values()) else 1)
@@ -214,12 +128,7 @@ def verify(plan_id: str, question: list[str] = typer.Option(["我的手机号是
 @app.command()
 def report(plan_id: str, ws: Path = WS_OPT):
     """Write the Markdown evidence report."""
-    w, st = Workspace(ws), Workspace(ws).state()
-    md = build(_plan(st, plan_id), st, w.audit.events())
-    out = Path(ws) / "reports" / f"{plan_id}.md"
-    out.parent.mkdir(exist_ok=True)
-    out.write_text(md, encoding="utf-8")
-    typer.echo(str(out))
+    typer.echo(str(_call(service.report, Workspace(ws), plan_id)))
 
 
 @app.command()
@@ -233,6 +142,16 @@ def demo(scenario: str = typer.Argument(..., help="stale | erasure"),
     result = runner(wd)
     typer.echo(f"\n结果：{'通过' if result['passed'] else '失败'}（工作目录 {wd}）")
     raise typer.Exit(0 if result["passed"] else 1)
+
+
+@app.command()
+def ui(ws: Path = WS_OPT, port: int = typer.Option(8501)):
+    """Launch the Streamlit web UI (needs the `ui` extra)."""
+    import subprocess
+    import sys
+    app_path = Path(__file__).parent / "ui" / "app.py"
+    raise typer.Exit(subprocess.call([sys.executable, "-m", "streamlit", "run", str(app_path), "--server.port",
+                                      str(port), "--", "--ws", str(ws)]))
 
 
 @app.command()
