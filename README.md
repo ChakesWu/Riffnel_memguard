@@ -3,7 +3,7 @@
 > 面向 AI 智能体的记忆错误调查与修正验证平台
 > Memory error investigation and correction verification for AI agents
 
-**状态：设计与开发中（v0.1-draft）。** 本仓库目前只有项目说明，代码、部署流程与演示将陆续补充。
+**状态：开发中（v0.1 预览）。** 已可离线运行两个仿真演示；Web 界面、报告导出、基准集尚未完成。
 
 > 原名 MemGuard。因已有同领域同名开源项目（[ac12644/MemGuard](https://github.com/ac12644/MemGuard)）及同名学术论文（[Jia 等，CCS 2019](https://arxiv.org/pdf/1909.10594)），改名为 Riffnel_memguard。本项目与它们均无关联。
 
@@ -46,9 +46,27 @@ Riffnel_memguard **不存储记忆**。它接在现有记忆库（Mem0、Letta�
 
 非侵入、证据优先、非破坏性修正、人在回路、默认离线且确定性运行（LLM 为可选）、可重现、适配器可扩展。
 
-## 快速开始 / 部署
+## 快速开始
 
-待补充。
+需要 Python 3.10+，无需联网、无需 API 密钥。
+
+```bash
+pip install -e ".[dev]"
+riffnel-memguard demo stale     # 场景一：条款由 3 笔改为 6 笔，记忆过期
+riffnel-memguard demo erasure   # 场景二：原始手机号已删，摘要中仍有残留
+pytest
+```
+
+演示结果以退出码表示：0 为通过。部署流程（Docker 等）待补充。
+
+## 当前已实现 / 未实现
+
+| 已实现 | 未实现 |
+|---|---|
+| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、规则抽取、字符 n-gram TF-IDF 检索 | SQLite 适配器、溯源链接器（Linker） |
+| 调查：M1 过期、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | M2 冲突 |
+| 修正：预演、审批、应用、回滚（删除不可回滚） | 导入 memwall 等外部扫描结果 |
+| 验证：重放、回归、四层残留探测、来源更新后重新验证（函数层面） | CLI 的 `investigate/plan/apply/verify` 分步命令、证据报告、Web 界面、基准集 |
 
 ## 许可证
 

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "t_gold_waiver",
+    "key": "credit_card.gold.annual_fee.waiver_min_txn",
+    "question": "金卡免年费需要刷几笔？",
+    "scope": {
+      "product": "gold_card"
+    },
+    "must_include": [
+      "6笔"
+    ],
+    "must_not_include": [
+      "3笔"
+    ]
+  },
+  {
+    "id": "t_gold_fee",
+    "key": "credit_card.gold.annual_fee.amount",
+    "question": "金卡年费是多少？",
+    "scope": {
+      "product": "gold_card"
+    },
+    "must_include": [
+      "1000元"
+    ]
+  },
+  {
+    "id": "t_silver_waiver",
+    "key": "credit_card.silver.annual_fee.waiver_min_txn",
+    "question": "银卡免年费需要刷几笔？",
+    "scope": {
+      "product": "silver_card"
+    },
+    "must_include": [
+      "12笔"
+    ]
+  }
+]

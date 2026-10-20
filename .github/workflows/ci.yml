@@ -13,3 +13,5 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - run: pip install -e ".[dev]"
       - run: pytest
+      - run: riffnel-memguard demo stale
+      - run: riffnel-memguard demo erasure

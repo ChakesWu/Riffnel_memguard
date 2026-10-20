@@ -1,0 +1,84 @@
+[
+  {
+    "id": "src_cc",
+    "name": "示例银行信用卡条款（仿真）",
+    "issuer": "示例银行（虚构）",
+    "type": "product_terms",
+    "clauses": [
+      {
+        "id": "cl_gold_waiver",
+        "key": "credit_card.gold.annual_fee.waiver_min_txn",
+        "title": "金卡免年费条件",
+        "scope": {
+          "product": "gold_card"
+        },
+        "unit": "笔",
+        "keywords": [
+          "金卡免年费"
+        ],
+        "versions": [
+          {
+            "id": "cv_gw_1",
+            "version": "v1",
+            "text": "金卡免年费需要每年刷满3笔。",
+            "value": 3,
+            "valid_from": "2025-01-01",
+            "valid_to": "2026-06-30"
+          },
+          {
+            "id": "cv_gw_2",
+            "version": "v2",
+            "text": "金卡免年费需要每年刷满6笔（自2026-07-01起生效）。",
+            "value": 6,
+            "valid_from": "2026-07-01",
+            "valid_to": null
+          }
+        ]
+      },
+      {
+        "id": "cl_gold_fee",
+        "key": "credit_card.gold.annual_fee.amount",
+        "title": "金卡年费金额",
+        "scope": {
+          "product": "gold_card"
+        },
+        "unit": "元",
+        "keywords": [
+          "金卡年费为"
+        ],
+        "versions": [
+          {
+            "id": "cv_gf_1",
+            "version": "v1",
+            "text": "金卡年费为1000元。",
+            "value": 1000,
+            "valid_from": "2025-01-01",
+            "valid_to": null
+          }
+        ]
+      },
+      {
+        "id": "cl_silver_waiver",
+        "key": "credit_card.silver.annual_fee.waiver_min_txn",
+        "title": "银卡免年费条件",
+        "scope": {
+          "product": "silver_card"
+        },
+        "unit": "笔",
+        "keywords": [
+          "银卡免年费"
+        ],
+        "versions": [
+          {
+            "id": "cv_sw_1",
+            "version": "v1",
+            "text": "银卡免年费需要每年刷满12笔。",
+            "value": 12,
+            "valid_from": "2025-01-01",
+            "valid_to": null
+          }
+        ]
+      }
+    ]
+  }
+]

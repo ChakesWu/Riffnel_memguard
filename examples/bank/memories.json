@@ -1,0 +1,64 @@
+[
+  {
+    "id": "m_gold_waiver",
+    "content": "金卡免年费需要每年刷满3笔。",
+    "scope": {
+      "product": "gold_card"
+    },
+    "key": "credit_card.gold.annual_fee.waiver_min_txn",
+    "value": 3,
+    "written_at": "2025-02-01"
+  },
+  {
+    "id": "m_gold_waiver_sum",
+    "kind": "summary",
+    "derived_from": [
+      "m_gold_waiver"
+    ],
+    "scope": {
+      "product": "gold_card"
+    },
+    "content": "咨询摘要：用户问过金卡免年费条件，已答复刷满3笔。",
+    "written_at": "2025-03-10"
+  },
+  {
+    "id": "m_gold_fee",
+    "content": "金卡年费为1000元。",
+    "scope": {
+      "product": "gold_card"
+    },
+    "key": "credit_card.gold.annual_fee.amount",
+    "value": 1000,
+    "written_at": "2025-02-01"
+  },
+  {
+    "id": "m_silver_waiver",
+    "content": "银卡免年费需要每年刷满12笔。",
+    "scope": {
+      "product": "silver_card"
+    },
+    "key": "credit_card.silver.annual_fee.waiver_min_txn",
+    "value": 12,
+    "written_at": "2025-02-01"
+  },
+  {
+    "id": "m_phone_raw",
+    "content": "客户张三（仿真）的手机号是13800000000。",
+    "scope": {
+      "user": "u_demo"
+    },
+    "written_at": "2026-03-01"
+  },
+  {
+    "id": "m_phone_sum",
+    "kind": "summary",
+    "derived_from": [
+      "m_phone_raw"
+    ],
+    "scope": {
+      "user": "u_demo"
+    },
+    "content": "回访摘要：客户张三留有手机号138 0000 0000，已于3月回访。",
+    "written_at": "2026-03-15"
+  }
+]
