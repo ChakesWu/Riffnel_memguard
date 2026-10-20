@@ -145,13 +145,14 @@ def demo(scenario: str = typer.Argument(..., help="stale | erasure"),
 
 
 @app.command()
-def ui(ws: Path = WS_OPT, port: int = typer.Option(8501)):
+def ui(ws: Path = WS_OPT, port: int = typer.Option(8501), address: str = typer.Option("localhost")):
     """Launch the Streamlit web UI (needs the `ui` extra)."""
     import subprocess
     import sys
     app_path = Path(__file__).parent / "ui" / "app.py"
     raise typer.Exit(subprocess.call([sys.executable, "-m", "streamlit", "run", str(app_path), "--server.port",
-                                      str(port), "--", "--ws", str(ws)]))
+                                      str(port), "--server.address", address, "--server.headless", "true",
+                                      "--", "--ws", str(ws)]))
 
 
 @app.command()

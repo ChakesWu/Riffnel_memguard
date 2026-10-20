@@ -27,5 +27,8 @@ riffnel-memguard = "riffnel_memguard.cli:app"
 [tool.setuptools.packages.find]
 include = ["riffnel_memguard*"]
 
+[tool.setuptools.package-data]
+"riffnel_memguard.examples.bank" = ["*.json", "*.md"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]

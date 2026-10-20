@@ -9,7 +9,7 @@ from ..adapters.base import JsonFileStore
 from .audit import AuditLog
 from .models import Source, TestCase
 
-EXAMPLES = Path(__file__).resolve().parents[2] / "examples" / "bank"
+EXAMPLES = Path(__file__).resolve().parents[1] / "examples" / "bank"
 
 
 class Workspace:

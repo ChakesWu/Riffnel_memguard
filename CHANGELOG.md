@@ -6,3 +6,4 @@
 - 分步 CLI（ask/investigate/plan/diff/approve/apply/verify/report/revalidate/erase）与 Markdown 证据报告。
 - 仿真基准集（60 例）与 `benchmark` 命令；M3 改为按条款作用域检测并用 rescope 修正；修正时已有正确记忆则不重复新增。
 - Streamlit 界面（黑白）；流程逻辑抽到 `service` 模块，CLI 与界面共用。
+- Dockerfile、docker-compose、CI 镜像构建任务；示例数据移入包内（`riffnel_memguard/examples`），支持非 editable 安装。

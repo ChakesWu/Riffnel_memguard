@@ -12,7 +12,7 @@ from .core.models import Incident, Source, TestCase
 from .engines import corrector, investigator, verifier
 from .probes.erasure import mask
 
-EXAMPLES = Path(__file__).resolve().parents[1] / "examples" / "bank"
+EXAMPLES = Path(__file__).resolve().parent / "examples" / "bank"
 
 
 def _setup(workdir: Path):

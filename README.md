@@ -74,7 +74,18 @@ riffnel-memguard audit verify .riffnel/audit.db
 
 Web 界面（黑白，需 `pip install -e ".[ui]"`）：`riffnel-memguard ui`，涵盖总览、事故调查、删除请求、来源更新、审计链，可审批、应用、验证并下载报告。
 
-场景二用 `simulate-delete m_phone_raw`、`erase --subject user=u_demo --target 13800000000` 代替 `ask`/`investigate`/`plan`；来源更新后用 `revalidate --as-of <日期>`。部署流程（Docker 等）待补充。
+场景二用 `simulate-delete m_phone_raw`、`erase --subject user=u_demo --target 13800000000` 代替 `ask`/`investigate`/`plan`；来源更新后用 `revalidate --as-of <日期>`。
+
+## 部署（Docker）
+
+```bash
+docker compose up --build            # 浏览器打开 http://localhost:8501
+docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命令行演示
+```
+
+数据保存在容器的 `/data` 卷（`memories.json`、审计库等）；首次启动自动用仿真示例初始化。镜像为 `python:3.12-slim`，以非 root 用户运行，无需联网。
+
+> 状态：Dockerfile 已写好，但作者的开发环境没有 Docker 服务，**尚未在本地实际构建过镜像**；已在干净 venv 中验证 `pip install ".[ui]"`、两个演示与界面启动。CI 中的 `docker` 任务会在 GitHub 上构建并运行演示。
 
 ## 基准集（仿真）
 

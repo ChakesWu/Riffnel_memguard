@@ -1,0 +1,10 @@
+services:
+  riffnel-memguard:
+    build: .
+    ports:
+      - "8501:8501"
+    volumes:
+      - riffnel-data:/data
+
+volumes:
+  riffnel-data:

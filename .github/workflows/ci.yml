@@ -16,3 +16,10 @@ jobs:
       - run: riffnel-memguard demo stale
       - run: riffnel-memguard demo erasure
       - run: riffnel-memguard benchmark
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t riffnel-memguard .
+      - run: docker run --rm riffnel-memguard riffnel-memguard demo stale
+      - run: docker run --rm riffnel-memguard riffnel-memguard demo erasure
