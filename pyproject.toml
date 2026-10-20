@@ -22,7 +22,10 @@ ui = ["streamlit"]
 memwall = ["memwall>=0.6.1,<0.7"]
 mem0 = ["mem0ai>=2.2.1,<2.3"]
 embedder = ["fastembed>=0.9,<0.10"]
-agent = ["pydantic-ai-slim[openai]>=2.58,<3"]
+agent = [
+    "pydantic-ai-slim[openai]>=2.58,<3; python_version >= '3.11'",
+    "pydantic-ai-slim[openai]>=2.54,<2.55; python_version < '3.11'",  # 2.55+ needs Python 3.11
+]
 dev = ["pytest"]
 
 [project.scripts]
