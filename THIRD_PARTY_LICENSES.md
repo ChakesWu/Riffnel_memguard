@@ -1,13 +1,15 @@
 # 第三方依赖许可证
 
-下列依赖的许可证**尚未逐项核实**，核实后在此填写并附链接。
+核实日期：2026-10-20。来源：各包 PyPI JSON 元数据（`https://pypi.org/pypi/<包名>/json`）。
 
-| 依赖 | 用途 | 许可证 |
-|---|---|---|
-| pydantic | 数据模型 | 未核实 |
-| typer | CLI | 未核实 |
-| rich | 终端输出 | 未核实 |
-| jinja2 | 报告模板 | 未核实 |
-| scikit-learn | TF-IDF 相似度 | 未核实 |
-| streamlit（可选） | Web 界面 | 未核实 |
-| pytest（开发） | 测试 | 未核实 |
+| 依赖 | 用途 | 版本（核实时最新） | 许可证 | 备注 |
+|---|---|---|---|---|
+| [pydantic](https://pypi.org/project/pydantic/) | 数据模型 | 2.14.1 | MIT | |
+| [typer](https://pypi.org/project/typer/) | CLI | 0.27.3 | MIT | |
+| [rich](https://pypi.org/project/rich/) | 终端输出 | 15.0.0 | MIT | |
+| [Jinja2](https://pypi.org/project/Jinja2/) | 报告模板 | 3.1.6 | BSD（分类器 `OSI Approved :: BSD License`） | 元数据未标明具体条款，未核实是 BSD-3-Clause |
+| [scikit-learn](https://pypi.org/project/scikit-learn/) | TF-IDF 相似度 | 1.9.1 | BSD-3-Clause | |
+| [Streamlit](https://pypi.org/project/streamlit/)（可选） | Web 界面 | 1.66.0 | Apache-2.0 | |
+| [pytest](https://pypi.org/project/pytest/)（开发） | 测试 | 9.1.1 | MIT | |
+
+以上只核实了直接依赖，**传递依赖（如 numpy、scipy）尚未核实。** 本项目为 Apache-2.0，上列许可证均为宽松许可证，与 Apache-2.0 项目兼容（此为一般判断，非法律意见）。
