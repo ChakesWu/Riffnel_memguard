@@ -43,7 +43,13 @@ MemGuard **不存储记忆**。它接在现有记忆库（Mem0、Letta、自研 
 
 非侵入、证据优先、非破坏性修正、人在回路、默认离线且确定性运行（LLM 为可选）、可重现、适配器可扩展。
 
+## 治理与贡献
+
+[CONTRIBUTING](CONTRIBUTING.md) · [GOVERNANCE](GOVERNANCE.md) · [SECURITY](SECURITY.md) · [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
+
 ## 路线图
+
+详见 [ROADMAP.md](ROADMAP.md)。
 
 | 版本 | 时间 | 内容 |
 |---|---|---|
@@ -57,7 +63,7 @@ MemGuard **不存储记忆**。它接在现有记忆库（Mem0、Letta、自研 
 
 ## 许可证
 
-待确认（Apache-2.0 或 MulanPSL-2.0）。
+[Apache-2.0](LICENSE)
 
 ## 声明
 

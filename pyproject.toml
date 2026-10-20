@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "memguard"
+version = "0.1.0.dev0"
+description = "Memory error investigation and correction verification for AI agents"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = [
+    "pydantic>=2",
+    "typer",
+    "rich",
+    "jinja2",
+    "scikit-learn",
+]
+
+[project.optional-dependencies]
+ui = ["streamlit"]
+dev = ["pytest"]
+
+[project.scripts]
+memguard = "memguard.cli:app"
+
+[tool.setuptools.packages.find]
+include = ["memguard*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
