@@ -8,7 +8,9 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from .adapters.mem0_adapter import Mem0Adapter, make_offline_memory
+import os
+
+from .adapters.mem0_adapter import Mem0Adapter, make_memory
 from .agent.enterprise import EnterpriseBankAgent
 from .agent.trace import capture
 from .core.audit import AuditLog
@@ -20,7 +22,7 @@ from .probes.erasure import bytes_residue, mask
 
 def _stack(workdir: Path):
     workdir.mkdir(parents=True, exist_ok=True)
-    store = Mem0Adapter(make_offline_memory(workdir / "mem0"), agent_id="bank-bot")
+    store = Mem0Adapter(make_memory(workdir / "mem0", os.environ.get("RIFFNEL_EMBEDDER", "hash")), agent_id="bank-bot")
     for m in json.loads((EXAMPLES / "memories.json").read_text(encoding="utf-8")):
         store.add(MemoryRecord(**m))
     sources = [Source(**s) for s in json.loads((EXAMPLES / "sources.json").read_text(encoding="utf-8"))]

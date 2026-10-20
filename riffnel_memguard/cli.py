@@ -200,8 +200,9 @@ def demo(scenario: str = typer.Argument(..., help="stale | erasure | sqlite-stal
     except Exception as e:  # real-stack demos call an external model; show the cause, not a stack trace
         if not scenario.startswith("real-"):
             raise
-        typer.echo(f"\n模型调用失败：{type(e).__name__}: {str(e)[:300]}\n"
-                   "请检查 RIFFNEL_AGENT_MODEL 与对应密钥环境变量；不设置 RIFFNEL_AGENT_MODEL 则使用离线替身。", err=True)
+        typer.echo(f"\n真实堆栈运行失败：{type(e).__name__}: {str(e)[:300]}\n"
+                   "可能原因：模型（RIFFNEL_AGENT_MODEL 与密钥环境变量）、嵌入器（RIFFNEL_EMBEDDER=fastembed 需要下载模型）"
+                   "或网络；两者都不设置则使用离线替身。", err=True)
         raise typer.Exit(2)
     typer.echo(f"\n结果：{'通过' if result['passed'] else '失败'}（工作目录 {wd}）")
     raise typer.Exit(0 if result["passed"] else 1)

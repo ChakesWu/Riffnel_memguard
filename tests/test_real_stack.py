@@ -67,3 +67,11 @@ def test_real_stack_erasure_scenario_and_independent_byte_scan(tmp_path):
     assert r["passed"]
     assert r["bytes_before"] and not r["bytes_after"]  # files held the number before; none after
     assert not r["pre"]["clean"] and r["post"]["clean"]
+
+
+@pytest.mark.skipif(not __import__("os").environ.get("RIFFNEL_TEST_REAL_EMBEDDER"),
+                    reason="downloads ~96 MB from Hugging Face; set RIFFNEL_TEST_REAL_EMBEDDER=1 to run")
+def test_real_embedder_stale_scenario(tmp_path, monkeypatch):
+    pytest.importorskip("fastembed")
+    monkeypatch.setenv("RIFFNEL_EMBEDDER", "fastembed")
+    assert demo_real.run_stale(tmp_path, log=lambda *_: None)["passed"]

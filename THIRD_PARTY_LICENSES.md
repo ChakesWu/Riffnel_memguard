@@ -16,5 +16,7 @@
 | [mem0ai](https://pypi.org/project/mem0ai/)（可选 extra `mem0`） | 真实记忆库适配器 | 2.2.1 | Apache-2.0（PyPI 元数据） | 其依赖（含默认遥测用的 posthog）未逐项核实 |
 | [pydantic-ai-slim](https://pypi.org/project/pydantic-ai-slim/)（可选 extra `agent`） | 企业客服智能体 | 2.58.0 | MIT（PyPI 元数据） | |
 | [qdrant-client](https://pypi.org/project/qdrant-client/)（随 mem0ai 安装） | Mem0 本地向量库 | 1.19.1 | Apache-2.0（PyPI 元数据） | 传递依赖 |
+| [fastembed](https://pypi.org/project/fastembed/)（可选，真实嵌入器） | 本地嵌入推理 | 0.9.0 | Apache-2.0（PyPI 元数据） | 其传递依赖（onnxruntime 等）未逐项核实 |
+| [BAAI/bge-small-zh-v1.5](https://huggingface.co/BAAI/bge-small-zh-v1.5)（模型权重，不随本项目分发） | 真实嵌入模型 | — | MIT（Hugging Face 模型页标注） | 运行时按需下载 |
 
 以上只核实了直接依赖，**传递依赖（如 numpy、scipy）尚未核实。** 本项目为 Apache-2.0，上列许可证均为宽松许可证，与 Apache-2.0 项目兼容（此为一般判断，非法律意见）。

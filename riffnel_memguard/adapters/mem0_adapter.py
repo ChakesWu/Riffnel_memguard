@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import os
 import sqlite3
+import sys
 from pathlib import Path
 from typing import Any, Optional
 
@@ -54,11 +55,20 @@ def _disable_mem0_telemetry() -> None:
         t.client_telemetry.posthog = None
 
 
-def make_offline_memory(workdir: str | Path):
-    """A real `mem0.Memory` backed by local Qdrant and SQLite history, with the offline embedder.
+REAL_EMBEDDER_MODEL = "BAAI/bge-small-zh-v1.5"  # 512-dim Chinese model, MIT licensed on its model card (unverified here)
+
+
+def make_memory(workdir: str | Path, embedder: str = "hash"):
+    """A real `mem0.Memory` backed by local Qdrant and SQLite history.
+
+    embedder="hash": the offline test seam above (no download). embedder="fastembed": Mem0's own fastembed embedder
+    with `REAL_EMBEDDER_MODEL`, downloaded from Hugging Face on first use (needs `pip install fastembed`; on networks
+    that block the Xet download host, `HF_HUB_DISABLE_XET=1` is set for you).
 
     Forces Mem0 telemetry off. If you wrap your own `Memory` in `Mem0Adapter`, its telemetry settings are untouched.
     """
+    if embedder not in ("hash", "fastembed"):
+        raise ValueError("embedder must be 'hash' or 'fastembed'")
     _disable_mem0_telemetry()
     from mem0 import Memory
     import mem0.memory.main as mem0_main
@@ -67,16 +77,32 @@ def make_offline_memory(workdir: str | Path):
     # Mem0 keeps a second local Qdrant under ~/.mem0 shared by every Memory in the process (two instances
     # collide on its lock). Point it at this working directory instead.
     mem0_main.mem0_dir = str(wd / ".mem0")
+    dims = OfflineHashEmbedder.dims if embedder == "hash" else 512
+    if embedder == "fastembed":
+        os.environ.setdefault("HF_HUB_DISABLE_XET", "1")
+        if "huggingface_hub" in sys.modules:  # the constant is read at import time, so patch it if already loaded
+            import huggingface_hub.constants as hf_constants
+            if os.environ["HF_HUB_DISABLE_XET"] == "1" and hasattr(hf_constants, "HF_HUB_DISABLE_XET"):
+                hf_constants.HF_HUB_DISABLE_XET = True
+        emb_cfg = {"provider": "fastembed", "config": {"model": REAL_EMBEDDER_MODEL, "embedding_dims": dims}}
+    else:
+        emb_cfg = {"provider": "openai", "config": {"api_key": "unused", "embedding_dims": dims}}
     cfg = {
-        "embedder": {"provider": "openai", "config": {"api_key": "unused", "embedding_dims": OfflineHashEmbedder.dims}},
+        "embedder": emb_cfg,
         "vector_store": {"provider": "qdrant", "config": {"path": str(wd / "qdrant"), "collection_name": "riffnel",
-                                                          "embedding_model_dims": OfflineHashEmbedder.dims}},
+                                                          "embedding_model_dims": dims}},
         "history_db_path": str(wd / "history.db"),
         "llm": {"provider": "openai", "config": {"api_key": "unused"}},  # never called: we add with infer=False
     }
     m = Memory.from_config(cfg)
-    m.embedding_model = OfflineHashEmbedder()
+    if embedder == "hash":
+        m.embedding_model = OfflineHashEmbedder()
     return m
+
+
+def make_offline_memory(workdir: str | Path):
+    """Kept for compatibility: the offline hash-embedder stack."""
+    return make_memory(workdir, "hash")
 
 
 class Mem0Adapter:

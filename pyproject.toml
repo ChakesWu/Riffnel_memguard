@@ -21,6 +21,7 @@ dependencies = [
 ui = ["streamlit"]
 memwall = ["memwall"]
 mem0 = ["mem0ai"]
+embedder = ["fastembed"]
 agent = ["pydantic-ai-slim[openai]"]
 dev = ["pytest"]
 

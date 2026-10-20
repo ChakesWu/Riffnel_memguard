@@ -13,3 +13,4 @@
 - 真实堆栈：Mem0 适配器、Pydantic AI 企业客服智能体、检索追踪、`demo real-stale` / `real-erasure`；残留探测纳入 Mem0 历史库；修复修正方案重复新增/停用；强制关闭 Mem0 遥测。
 - SQLite 适配器（可映射已有表）与 `demo sqlite-stale/sqlite-erasure`；`agent` extra 含 openai 以支持 `deepseek:` 等模型串；记录 Letta 无法在当前环境验证的原因。
 - 真实模型（DeepSeek）验证 `real-stale`；修复回归比对对空白与 Markdown 敏感的缺陷（真实模型下回归 6/10 → 10/10）。
+- 真实嵌入器（Mem0 fastembed + BAAI/bge-small-zh-v1.5）与真实 DeepSeek 模型组合验证两个场景；`make_memory(embedder=...)`；真实堆栈失败时给出更准确的错误说明。
