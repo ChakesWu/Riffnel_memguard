@@ -73,6 +73,32 @@ def revalidate(as_of: str = typer.Option(...), ws: Path = WS_OPT):
 
 
 @app.command()
+def link(ws: Path = WS_OPT):
+    """Link memories to the clause versions they rely on."""
+    links, unsupported = service.link(Workspace(ws))
+    for l in links:
+        typer.echo(f"{l.memory_id} -> {l.clause_version_id}  {l.method} {l.confidence}")
+    for mid, key, value, reason in unsupported:
+        typer.echo(f"未链接（M4 候选）{mid}：{key}={value}（{reason}）")
+
+
+@app.command()
+def impact(version_id: str, ws: Path = WS_OPT):
+    """Show memories, derived memories and tests that depend on a clause version."""
+    r = _call(service.impact, Workspace(ws), version_id)
+    typer.echo(f"条款 {r['clause_key']}\n记忆：{r['memories']}\n派生：{r['derived']}\n测试题：{r['tests']}")
+
+
+@app.command()
+def scan(as_of: str = typer.Option(...), ws: Path = WS_OPT):
+    """Health scan without an incident: M1 stale, M2 conflict, M4 unsupported. Drafts a plan."""
+    fs, pid = service.scan(Workspace(ws), as_of)
+    for f in fs:
+        typer.echo(f"{f.cls} {f.memory_id}：{mask_text(f.evidence.get('memory_text', ''))}")
+    typer.echo(f"方案 {pid}" if pid else "未发现问题。")
+
+
+@app.command()
 def erase(subject: list[str] = typer.Option(..., "--subject", help="key=value scope of the data subject"),
           target: list[str] = typer.Option(..., "--target", help="Exact value that must be gone, repeatable"),
           description: str = typer.Option("", help="Text used for the semantic probe"),

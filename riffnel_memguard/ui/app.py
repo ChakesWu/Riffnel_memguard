@@ -136,6 +136,10 @@ def page_revalidate(w: Workspace) -> None:
         fs, pid = service.revalidate(w, as_of)
         st.session_state["rplan"] = pid
         st.info(f"{len(fs)} 条记忆过期" if fs else "没有依赖旧版本的有效记忆")
+    if st.button("全面体检（过期 / 冲突 / 无来源）"):
+        fs, pid = service.scan(w, as_of)
+        st.session_state["rplan"] = pid
+        st.info("、".join(f"{f.cls} {f.memory_id}" for f in fs) if fs else "未发现问题")
     if st.session_state.get("rplan") in w.state()["plans"]:
         plan_panel(w, st.session_state["rplan"])
 

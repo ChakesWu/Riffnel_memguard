@@ -121,6 +121,11 @@ def incident_case(b: Builder, cid, kind, idx, expect, **kw):
         inc["answer"] = "好的，无需任何条件，免费办理。"
         case["strict_replay"] = False
         case["expect"]["not_retrieved"] = "m_bad"
+    elif kind == "M2":
+        u = next(x for x in range(41, 60))
+        ms[0] = b.memory("m_bad", text(tgt, t, u), scope_t, f"card.{tgt}.{t[0]}", u)
+        ms.append(good_new)  # a memory that matches the source exists next to the unsupported one
+        inc["answer"] = text(tgt, t, u)
     elif kind == "NEG_current":
         ms[0] = good_new
         inc["answer"], inc["retrieved"] = text(tgt, t, new), ["m_good"]
@@ -203,7 +208,8 @@ def generate():
             ("M1_rank2", 3, {"cls": "M1", "ids": ["m_bad"]}), ("M1_dup", 2, {"cls": "M1", "ids": ["m_bad"]}),
             ("M3", 6, {"cls": "M3", "ids": ["m_leak"]}), ("M4", 4, {"cls": "M4", "ids": ["m_bad"]}),
             ("M6", 3, {"cls": "M6", "ids": ["m_bad"]}), ("NEG_current", 3, {"cls": None}),
-            ("NEG_historic", 3, {"cls": None}), ("UNATTRIBUTABLE", 4, {"cls": None})]
+            ("NEG_historic", 3, {"cls": None}), ("UNATTRIBUTABLE", 4, {"cls": None}),
+            ("M2", 4, {"cls": "M2", "ids": ["m_bad"]})]
     for kind, count, expect in plan:
         for j in range(count):
             n += 1

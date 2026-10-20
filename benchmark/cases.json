@@ -8002,340 +8002,804 @@
   "strict_replay": true
  },
  {
-  "id": "c043_ERASURE",
-  "kind": "ERASURE",
+  "id": "c043_M2",
+  "kind": "M2",
   "hard": false,
+  "clauses": [
+   {
+    "id": "cl_0",
+    "key": "card.青年卡.limit",
+    "title": "青年卡单日转账限额",
+    "topic": "limit",
+    "scope": {
+     "product": "青年卡"
+    },
+    "unit": "元",
+    "keywords": [
+     "青年卡单日转账限额"
+    ],
+    "versions": [
+     {
+      "id": "cv_0_1",
+      "version": "v1",
+      "text": "青年卡单日转账限额为33元。",
+      "value": 33,
+      "valid_from": "2025-01-01",
+      "valid_to": "2026-06-30"
+     },
+     {
+      "id": "cv_0_2",
+      "version": "v2",
+      "text": "青年卡单日转账限额为34元。",
+      "value": 34,
+      "valid_from": "2026-07-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_1",
+    "key": "card.银卡.limit",
+    "title": "银卡单日转账限额",
+    "topic": "limit",
+    "scope": {
+     "product": "银卡"
+    },
+    "unit": "元",
+    "keywords": [
+     "银卡单日转账限额"
+    ],
+    "versions": [
+     {
+      "id": "cv_1_1",
+      "version": "v1",
+      "text": "银卡单日转账限额为28元。",
+      "value": 28,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_2",
+    "key": "card.学生卡.limit",
+    "title": "学生卡单日转账限额",
+    "topic": "limit",
+    "scope": {
+     "product": "学生卡"
+    },
+    "unit": "元",
+    "keywords": [
+     "学生卡单日转账限额"
+    ],
+    "versions": [
+     {
+      "id": "cv_2_1",
+      "version": "v1",
+      "text": "学生卡单日转账限额为24元。",
+      "value": 24,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   }
+  ],
   "memories": [
    {
-    "id": "m_other",
-    "content": "客户周五（仿真）曾咨询卡片权益。",
+    "id": "m_bad",
+    "content": "青年卡单日转账限额为41元。",
     "kind": "fact",
     "scope": {
-     "user": "u_other"
+     "product": "青年卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.青年卡.limit",
+    "value": 41,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_plain",
-    "content": "客户李四（仿真）曾咨询卡片权益。",
-    "kind": "summary",
-    "scope": {
-     "user": "u_43"
-    },
-    "key": null,
-    "value": null,
-    "status": "active",
-    "written_at": "2025-02-01",
-    "derived_from": [],
-    "supersedes": null
-   },
-   {
-    "id": "m_raw",
-    "content": "客户李四（仿真）的手机号是13277865812。",
+    "id": "m_d1",
+    "content": "银卡单日转账限额为28元。",
     "kind": "fact",
     "scope": {
-     "user": "u_43"
+     "product": "银卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.银卡.limit",
+    "value": 28,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_sum1",
-    "content": "回访摘要：客户李四（仿真）留有手机号13277865812，已回访。",
-    "kind": "summary",
+    "id": "m_d2",
+    "content": "学生卡单日转账限额为24元。",
+    "kind": "fact",
     "scope": {
-     "user": "u_43"
+     "product": "学生卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.学生卡.limit",
+    "value": 24,
     "status": "active",
     "written_at": "2025-02-01",
-    "derived_from": [
-     "m_raw"
-    ],
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_good",
+    "content": "青年卡单日转账限额为34元。",
+    "kind": "fact",
+    "scope": {
+     "product": "青年卡"
+    },
+    "key": "card.青年卡.limit",
+    "value": 34,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
     "supersedes": null
    }
   ],
-  "upstream_delete": [
-   "m_raw"
-  ],
-  "subject": {
-   "user": "u_43"
+  "incident": {
+   "occurred_at": "2026-08-10",
+   "scope": {
+    "product": "青年卡"
+   },
+   "question": "青年卡单日转账限额是多少？",
+   "answer": "青年卡单日转账限额为41元。",
+   "retrieved": [
+    "m_bad"
+   ]
   },
-  "targets": [
-   "13277865812"
-  ],
-  "description": "客户李四的手机号 13277865812",
-  "questions": [
-   "我的手机号是多少？"
+  "as_of": "2026-09-01",
+  "tests": [
+   {
+    "id": "t_0",
+    "key": "card.青年卡.limit",
+    "question": "青年卡单日转账限额是多少？",
+    "scope": {
+     "product": "青年卡"
+    },
+    "must_include": [
+     "34元"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_1",
+    "key": "card.银卡.limit",
+    "question": "银卡单日转账限额是多少？",
+    "scope": {
+     "product": "银卡"
+    },
+    "must_include": [
+     "28元"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_2",
+    "key": "card.学生卡.limit",
+    "question": "学生卡单日转账限额是多少？",
+    "scope": {
+     "product": "学生卡"
+    },
+    "must_include": [
+     "24元"
+    ],
+    "must_not_include": []
+   }
   ],
   "expect": {
-   "residue": [
-    "m_sum1"
-   ],
-   "detect": true
-  }
+   "cls": "M2",
+   "ids": [
+    "m_bad"
+   ]
+  },
+  "target_key": "card.青年卡.limit",
+  "strict_replay": true
  },
  {
-  "id": "c044_ERASURE",
-  "kind": "ERASURE",
+  "id": "c044_M2",
+  "kind": "M2",
   "hard": false,
+  "clauses": [
+   {
+    "id": "cl_0",
+    "key": "card.青年卡.claim",
+    "title": "青年卡理赔审核时效",
+    "topic": "claim",
+    "scope": {
+     "product": "青年卡"
+    },
+    "unit": "个工作日",
+    "keywords": [
+     "青年卡理赔审核时效"
+    ],
+    "versions": [
+     {
+      "id": "cv_0_1",
+      "version": "v1",
+      "text": "青年卡理赔审核时效为12个工作日。",
+      "value": 12,
+      "valid_from": "2025-01-01",
+      "valid_to": "2026-06-30"
+     },
+     {
+      "id": "cv_0_2",
+      "version": "v2",
+      "text": "青年卡理赔审核时效为39个工作日。",
+      "value": 39,
+      "valid_from": "2026-07-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_1",
+    "key": "card.商务卡.claim",
+    "title": "商务卡理赔审核时效",
+    "topic": "claim",
+    "scope": {
+     "product": "商务卡"
+    },
+    "unit": "个工作日",
+    "keywords": [
+     "商务卡理赔审核时效"
+    ],
+    "versions": [
+     {
+      "id": "cv_1_1",
+      "version": "v1",
+      "text": "商务卡理赔审核时效为13个工作日。",
+      "value": 13,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_2",
+    "key": "card.金卡.claim",
+    "title": "金卡理赔审核时效",
+    "topic": "claim",
+    "scope": {
+     "product": "金卡"
+    },
+    "unit": "个工作日",
+    "keywords": [
+     "金卡理赔审核时效"
+    ],
+    "versions": [
+     {
+      "id": "cv_2_1",
+      "version": "v1",
+      "text": "金卡理赔审核时效为19个工作日。",
+      "value": 19,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   }
+  ],
   "memories": [
    {
-    "id": "m_other",
-    "content": "客户吴六（仿真）曾咨询卡片权益。",
+    "id": "m_bad",
+    "content": "青年卡理赔审核时效为41个工作日。",
     "kind": "fact",
     "scope": {
-     "user": "u_other"
+     "product": "青年卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.青年卡.claim",
+    "value": 41,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_plain",
-    "content": "客户周五（仿真）曾咨询卡片权益。",
-    "kind": "summary",
-    "scope": {
-     "user": "u_44"
-    },
-    "key": null,
-    "value": null,
-    "status": "active",
-    "written_at": "2025-02-01",
-    "derived_from": [],
-    "supersedes": null
-   },
-   {
-    "id": "m_raw",
-    "content": "客户周五（仿真）的手机号是13924342627。",
+    "id": "m_d1",
+    "content": "商务卡理赔审核时效为13个工作日。",
     "kind": "fact",
     "scope": {
-     "user": "u_44"
+     "product": "商务卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.商务卡.claim",
+    "value": 13,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_sum1",
-    "content": "回访摘要：客户周五（仿真）留有手机号139 2434 2627，已回访。",
-    "kind": "summary",
+    "id": "m_d2",
+    "content": "金卡理赔审核时效为19个工作日。",
+    "kind": "fact",
     "scope": {
-     "user": "u_44"
+     "product": "金卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.金卡.claim",
+    "value": 19,
     "status": "active",
     "written_at": "2025-02-01",
-    "derived_from": [
-     "m_raw"
-    ],
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_good",
+    "content": "青年卡理赔审核时效为39个工作日。",
+    "kind": "fact",
+    "scope": {
+     "product": "青年卡"
+    },
+    "key": "card.青年卡.claim",
+    "value": 39,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
     "supersedes": null
    }
   ],
-  "upstream_delete": [
-   "m_raw"
-  ],
-  "subject": {
-   "user": "u_44"
+  "incident": {
+   "occurred_at": "2026-08-10",
+   "scope": {
+    "product": "青年卡"
+   },
+   "question": "青年卡理赔审核时效是多久？",
+   "answer": "青年卡理赔审核时效为41个工作日。",
+   "retrieved": [
+    "m_bad"
+   ]
   },
-  "targets": [
-   "13924342627"
-  ],
-  "description": "客户周五的手机号 13924342627",
-  "questions": [
-   "我的手机号是多少？"
+  "as_of": "2026-09-01",
+  "tests": [
+   {
+    "id": "t_0",
+    "key": "card.青年卡.claim",
+    "question": "青年卡理赔审核时效是多久？",
+    "scope": {
+     "product": "青年卡"
+    },
+    "must_include": [
+     "39个工作日"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_1",
+    "key": "card.商务卡.claim",
+    "question": "商务卡理赔审核时效是多久？",
+    "scope": {
+     "product": "商务卡"
+    },
+    "must_include": [
+     "13个工作日"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_2",
+    "key": "card.金卡.claim",
+    "question": "金卡理赔审核时效是多久？",
+    "scope": {
+     "product": "金卡"
+    },
+    "must_include": [
+     "19个工作日"
+    ],
+    "must_not_include": []
+   }
   ],
   "expect": {
-   "residue": [
-    "m_sum1"
-   ],
-   "detect": true
-  }
+   "cls": "M2",
+   "ids": [
+    "m_bad"
+   ]
+  },
+  "target_key": "card.青年卡.claim",
+  "strict_replay": true
  },
  {
-  "id": "c045_ERASURE",
-  "kind": "ERASURE",
+  "id": "c045_M2",
+  "kind": "M2",
   "hard": false,
+  "clauses": [
+   {
+    "id": "cl_0",
+    "key": "card.银卡.cool",
+    "title": "银卡投保冷静期",
+    "topic": "cool",
+    "scope": {
+     "product": "银卡"
+    },
+    "unit": "天",
+    "keywords": [
+     "银卡投保冷静期"
+    ],
+    "versions": [
+     {
+      "id": "cv_0_1",
+      "version": "v1",
+      "text": "银卡投保冷静期为26天。",
+      "value": 26,
+      "valid_from": "2025-01-01",
+      "valid_to": "2026-06-30"
+     },
+     {
+      "id": "cv_0_2",
+      "version": "v2",
+      "text": "银卡投保冷静期为11天。",
+      "value": 11,
+      "valid_from": "2026-07-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_1",
+    "key": "card.钻石卡.cool",
+    "title": "钻石卡投保冷静期",
+    "topic": "cool",
+    "scope": {
+     "product": "钻石卡"
+    },
+    "unit": "天",
+    "keywords": [
+     "钻石卡投保冷静期"
+    ],
+    "versions": [
+     {
+      "id": "cv_1_1",
+      "version": "v1",
+      "text": "钻石卡投保冷静期为30天。",
+      "value": 30,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_2",
+    "key": "card.青年卡.cool",
+    "title": "青年卡投保冷静期",
+    "topic": "cool",
+    "scope": {
+     "product": "青年卡"
+    },
+    "unit": "天",
+    "keywords": [
+     "青年卡投保冷静期"
+    ],
+    "versions": [
+     {
+      "id": "cv_2_1",
+      "version": "v1",
+      "text": "青年卡投保冷静期为5天。",
+      "value": 5,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   }
+  ],
   "memories": [
    {
-    "id": "m_other",
-    "content": "客户郑七（仿真）曾咨询卡片权益。",
+    "id": "m_bad",
+    "content": "银卡投保冷静期为41天。",
     "kind": "fact",
     "scope": {
-     "user": "u_other"
+     "product": "银卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.银卡.cool",
+    "value": 41,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_plain",
-    "content": "客户吴六（仿真）曾咨询卡片权益。",
-    "kind": "summary",
-    "scope": {
-     "user": "u_45"
-    },
-    "key": null,
-    "value": null,
-    "status": "active",
-    "written_at": "2025-02-01",
-    "derived_from": [],
-    "supersedes": null
-   },
-   {
-    "id": "m_raw",
-    "content": "客户吴六（仿真）的手机号是13005396526。",
+    "id": "m_d1",
+    "content": "钻石卡投保冷静期为30天。",
     "kind": "fact",
     "scope": {
-     "user": "u_45"
+     "product": "钻石卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.钻石卡.cool",
+    "value": 30,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_sum1",
-    "content": "回访摘要：客户吴六（仿真）留有手机号130-0539-6526，已回访。",
-    "kind": "summary",
+    "id": "m_d2",
+    "content": "青年卡投保冷静期为5天。",
+    "kind": "fact",
     "scope": {
-     "user": "u_45"
+     "product": "青年卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.青年卡.cool",
+    "value": 5,
     "status": "active",
     "written_at": "2025-02-01",
-    "derived_from": [
-     "m_raw"
-    ],
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_good",
+    "content": "银卡投保冷静期为11天。",
+    "kind": "fact",
+    "scope": {
+     "product": "银卡"
+    },
+    "key": "card.银卡.cool",
+    "value": 11,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
     "supersedes": null
    }
   ],
-  "upstream_delete": [
-   "m_raw"
-  ],
-  "subject": {
-   "user": "u_45"
+  "incident": {
+   "occurred_at": "2026-08-10",
+   "scope": {
+    "product": "银卡"
+   },
+   "question": "银卡投保冷静期是几天？",
+   "answer": "银卡投保冷静期为41天。",
+   "retrieved": [
+    "m_bad"
+   ]
   },
-  "targets": [
-   "13005396526"
-  ],
-  "description": "客户吴六的手机号 13005396526",
-  "questions": [
-   "我的手机号是多少？"
+  "as_of": "2026-09-01",
+  "tests": [
+   {
+    "id": "t_0",
+    "key": "card.银卡.cool",
+    "question": "银卡投保冷静期是几天？",
+    "scope": {
+     "product": "银卡"
+    },
+    "must_include": [
+     "11天"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_1",
+    "key": "card.钻石卡.cool",
+    "question": "钻石卡投保冷静期是几天？",
+    "scope": {
+     "product": "钻石卡"
+    },
+    "must_include": [
+     "30天"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_2",
+    "key": "card.青年卡.cool",
+    "question": "青年卡投保冷静期是几天？",
+    "scope": {
+     "product": "青年卡"
+    },
+    "must_include": [
+     "5天"
+    ],
+    "must_not_include": []
+   }
   ],
   "expect": {
-   "residue": [
-    "m_sum1"
-   ],
-   "detect": true
-  }
+   "cls": "M2",
+   "ids": [
+    "m_bad"
+   ]
+  },
+  "target_key": "card.银卡.cool",
+  "strict_replay": true
  },
  {
-  "id": "c046_ERASURE",
-  "kind": "ERASURE",
+  "id": "c046_M2",
+  "kind": "M2",
   "hard": false,
+  "clauses": [
+   {
+    "id": "cl_0",
+    "key": "card.金卡.points",
+    "title": "金卡积分有效期",
+    "topic": "points",
+    "scope": {
+     "product": "金卡"
+    },
+    "unit": "个月",
+    "keywords": [
+     "金卡积分有效期"
+    ],
+    "versions": [
+     {
+      "id": "cv_0_1",
+      "version": "v1",
+      "text": "金卡积分有效期为27个月。",
+      "value": 27,
+      "valid_from": "2025-01-01",
+      "valid_to": "2026-06-30"
+     },
+     {
+      "id": "cv_0_2",
+      "version": "v2",
+      "text": "金卡积分有效期为23个月。",
+      "value": 23,
+      "valid_from": "2026-07-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_1",
+    "key": "card.钻石卡.points",
+    "title": "钻石卡积分有效期",
+    "topic": "points",
+    "scope": {
+     "product": "钻石卡"
+    },
+    "unit": "个月",
+    "keywords": [
+     "钻石卡积分有效期"
+    ],
+    "versions": [
+     {
+      "id": "cv_1_1",
+      "version": "v1",
+      "text": "钻石卡积分有效期为12个月。",
+      "value": 12,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   },
+   {
+    "id": "cl_2",
+    "key": "card.银卡.points",
+    "title": "银卡积分有效期",
+    "topic": "points",
+    "scope": {
+     "product": "银卡"
+    },
+    "unit": "个月",
+    "keywords": [
+     "银卡积分有效期"
+    ],
+    "versions": [
+     {
+      "id": "cv_2_1",
+      "version": "v1",
+      "text": "银卡积分有效期为26个月。",
+      "value": 26,
+      "valid_from": "2025-01-01",
+      "valid_to": null
+     }
+    ]
+   }
+  ],
   "memories": [
    {
-    "id": "m_other",
-    "content": "客户王八（仿真）曾咨询卡片权益。",
+    "id": "m_bad",
+    "content": "金卡积分有效期为41个月。",
     "kind": "fact",
     "scope": {
-     "user": "u_other"
+     "product": "金卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.金卡.points",
+    "value": 41,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_plain",
-    "content": "客户郑七（仿真）曾咨询卡片权益。",
-    "kind": "summary",
-    "scope": {
-     "user": "u_46"
-    },
-    "key": null,
-    "value": null,
-    "status": "active",
-    "written_at": "2025-02-01",
-    "derived_from": [],
-    "supersedes": null
-   },
-   {
-    "id": "m_raw",
-    "content": "客户郑七（仿真）的手机号是13358580369。",
+    "id": "m_d1",
+    "content": "钻石卡积分有效期为12个月。",
     "kind": "fact",
     "scope": {
-     "user": "u_46"
+     "product": "钻石卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.钻石卡.points",
+    "value": 12,
     "status": "active",
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
    },
    {
-    "id": "m_sum1",
-    "content": "回访摘要：客户郑七（仿真）留有手机号１３３５８５８０３６９，已回访。",
-    "kind": "summary",
+    "id": "m_d2",
+    "content": "银卡积分有效期为26个月。",
+    "kind": "fact",
     "scope": {
-     "user": "u_46"
+     "product": "银卡"
     },
-    "key": null,
-    "value": null,
+    "key": "card.银卡.points",
+    "value": 26,
     "status": "active",
     "written_at": "2025-02-01",
-    "derived_from": [
-     "m_raw"
-    ],
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_good",
+    "content": "金卡积分有效期为23个月。",
+    "kind": "fact",
+    "scope": {
+     "product": "金卡"
+    },
+    "key": "card.金卡.points",
+    "value": 23,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
     "supersedes": null
    }
   ],
-  "upstream_delete": [
-   "m_raw"
-  ],
-  "subject": {
-   "user": "u_46"
+  "incident": {
+   "occurred_at": "2026-08-10",
+   "scope": {
+    "product": "金卡"
+   },
+   "question": "金卡积分有效期是多久？",
+   "answer": "金卡积分有效期为41个月。",
+   "retrieved": [
+    "m_bad"
+   ]
   },
-  "targets": [
-   "13358580369"
-  ],
-  "description": "客户郑七的手机号 13358580369",
-  "questions": [
-   "我的手机号是多少？"
+  "as_of": "2026-09-01",
+  "tests": [
+   {
+    "id": "t_0",
+    "key": "card.金卡.points",
+    "question": "金卡积分有效期是多久？",
+    "scope": {
+     "product": "金卡"
+    },
+    "must_include": [
+     "23个月"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_1",
+    "key": "card.钻石卡.points",
+    "question": "钻石卡积分有效期是多久？",
+    "scope": {
+     "product": "钻石卡"
+    },
+    "must_include": [
+     "12个月"
+    ],
+    "must_not_include": []
+   },
+   {
+    "id": "t_2",
+    "key": "card.银卡.points",
+    "question": "银卡积分有效期是多久？",
+    "scope": {
+     "product": "银卡"
+    },
+    "must_include": [
+     "26个月"
+    ],
+    "must_not_include": []
+   }
   ],
   "expect": {
-   "residue": [
-    "m_sum1"
-   ],
-   "detect": true
-  }
+   "cls": "M2",
+   "ids": [
+    "m_bad"
+   ]
+  },
+  "target_key": "card.金卡.points",
+  "strict_replay": true
  },
  {
   "id": "c047_ERASURE",
@@ -8372,7 +8836,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户王八（仿真）的身份证号是548820038481493118。",
+    "content": "客户王八（仿真）的手机号是13358580369。",
     "kind": "fact",
     "scope": {
      "user": "u_47"
@@ -8386,7 +8850,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户王八（仿真）留有身份证号5488 2003 8481 4931 18，已回访。",
+    "content": "回访摘要：客户王八（仿真）留有手机号13358580369，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_47"
@@ -8408,11 +8872,11 @@
    "user": "u_47"
   },
   "targets": [
-   "548820038481493118"
+   "13358580369"
   ],
-  "description": "客户王八的身份证号 548820038481493118",
+  "description": "客户王八的手机号 13358580369",
   "questions": [
-   "我的身份证号是多少？"
+   "我的手机号是多少？"
   ],
   "expect": {
    "residue": [
@@ -8456,7 +8920,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户冯九（仿真）的银行卡号是6253137029960419。",
+    "content": "客户冯九（仿真）的手机号是13548820038。",
     "kind": "fact",
     "scope": {
      "user": "u_48"
@@ -8470,7 +8934,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户冯九（仿真）留有银行卡号6253-1370-2996-0419，已回访。",
+    "content": "回访摘要：客户冯九（仿真）留有手机号135 4882 0038，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_48"
@@ -8492,11 +8956,11 @@
    "user": "u_48"
   },
   "targets": [
-   "6253137029960419"
+   "13548820038"
   ],
-  "description": "客户冯九的银行卡号 6253137029960419",
+  "description": "客户冯九的手机号 13548820038",
   "questions": [
-   "我的银行卡号是多少？"
+   "我的手机号是多少？"
   ],
   "expect": {
    "residue": [
@@ -8540,7 +9004,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户陈十（仿真）的邮箱是user0581@example.com。",
+    "content": "客户陈十（仿真）的手机号是13481493118。",
     "kind": "fact",
     "scope": {
      "user": "u_49"
@@ -8554,7 +9018,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户陈十（仿真）留有邮箱user0581@example.com，已回访。",
+    "content": "回访摘要：客户陈十（仿真）留有手机号134-8149-3118，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_49"
@@ -8576,11 +9040,11 @@
    "user": "u_49"
   },
   "targets": [
-   "user0581@example.com"
+   "13481493118"
   ],
-  "description": "客户陈十的邮箱 user0581@example.com",
+  "description": "客户陈十的手机号 13481493118",
   "questions": [
-   "我的邮箱是多少？"
+   "我的手机号是多少？"
   ],
   "expect": {
    "residue": [
@@ -8624,7 +9088,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户赵一（仿真）的身份证号是854906816035033761。",
+    "content": "客户赵一（仿真）的手机号是13531370299。",
     "kind": "fact",
     "scope": {
      "user": "u_50"
@@ -8638,7 +9102,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户赵一（仿真）留有身份证号854906816035033761，已回访。",
+    "content": "回访摘要：客户赵一（仿真）留有手机号１３５３１３７０２９９，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_50"
@@ -8660,11 +9124,11 @@
    "user": "u_50"
   },
   "targets": [
-   "854906816035033761"
+   "13531370299"
   ],
-  "description": "客户赵一的身份证号 854906816035033761",
+  "description": "客户赵一的手机号 13531370299",
   "questions": [
-   "我的身份证号是多少？"
+   "我的手机号是多少？"
   ],
   "expect": {
    "residue": [
@@ -8708,7 +9172,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户钱二（仿真）的手机号是13520013710。",
+    "content": "客户钱二（仿真）的身份证号是604190581854906816。",
     "kind": "fact",
     "scope": {
      "user": "u_51"
@@ -8722,7 +9186,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户钱二（仿真）留有手机号135 2001 3710，已回访。",
+    "content": "回访摘要：客户钱二（仿真）留有身份证号6041 9058 1854 9068 16，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_51"
@@ -8735,22 +9199,6 @@
      "m_raw"
     ],
     "supersedes": null
-   },
-   {
-    "id": "m_sum2",
-    "content": "回访摘要：客户钱二（仿真）留有手机号135 2001 3710，已回访。",
-    "kind": "summary",
-    "scope": {
-     "user": "u_51"
-    },
-    "key": null,
-    "value": null,
-    "status": "active",
-    "written_at": "2025-02-01",
-    "derived_from": [
-     "m_sum1"
-    ],
-    "supersedes": null
    }
   ],
   "upstream_delete": [
@@ -8760,16 +9208,15 @@
    "user": "u_51"
   },
   "targets": [
-   "13520013710"
+   "604190581854906816"
   ],
-  "description": "客户钱二的手机号 13520013710",
+  "description": "客户钱二的身份证号 604190581854906816",
   "questions": [
-   "我的手机号是多少？"
+   "我的身份证号是多少？"
   ],
   "expect": {
    "residue": [
-    "m_sum1",
-    "m_sum2"
+    "m_sum1"
    ],
    "detect": true
   }
@@ -8809,7 +9256,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户孙三（仿真）的银行卡号是6250334109380290。",
+    "content": "客户孙三（仿真）的银行卡号是6203503376152001。",
     "kind": "fact",
     "scope": {
      "user": "u_52"
@@ -8823,7 +9270,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户孙三（仿真）留有银行卡号6250 3341 0938 0290，已回访。",
+    "content": "回访摘要：客户孙三（仿真）留有银行卡号6203-5033-7615-2001，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_52"
@@ -8836,22 +9283,6 @@
      "m_raw"
     ],
     "supersedes": null
-   },
-   {
-    "id": "m_sum2",
-    "content": "回访摘要：客户孙三（仿真）留有银行卡号6250 3341 0938 0290，已回访。",
-    "kind": "summary",
-    "scope": {
-     "user": "u_52"
-    },
-    "key": null,
-    "value": null,
-    "status": "active",
-    "written_at": "2025-02-01",
-    "derived_from": [
-     "m_sum1"
-    ],
-    "supersedes": null
    }
   ],
   "upstream_delete": [
@@ -8861,24 +9292,23 @@
    "user": "u_52"
   },
   "targets": [
-   "6250334109380290"
+   "6203503376152001"
   ],
-  "description": "客户孙三的银行卡号 6250334109380290",
+  "description": "客户孙三的银行卡号 6203503376152001",
   "questions": [
    "我的银行卡号是多少？"
   ],
   "expect": {
    "residue": [
-    "m_sum1",
-    "m_sum2"
+    "m_sum1"
    ],
    "detect": true
   }
  },
  {
-  "id": "c053_ERASURE_HARD",
+  "id": "c053_ERASURE",
   "kind": "ERASURE",
-  "hard": true,
+  "hard": false,
   "memories": [
    {
     "id": "m_other",
@@ -8910,7 +9340,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户李四（仿真）的手机号是13476706465。",
+    "content": "客户李四（仿真）的邮箱是user3710@example.com。",
     "kind": "fact",
     "scope": {
      "user": "u_53"
@@ -8924,7 +9354,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户李四（仿真）留有手机号一三四七六七零六四六五，已回访。",
+    "content": "回访摘要：客户李四（仿真）留有邮箱user3710@example.com，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_53"
@@ -8946,11 +9376,11 @@
    "user": "u_53"
   },
   "targets": [
-   "13476706465"
+   "user3710@example.com"
   ],
-  "description": "客户李四的手机号 13476706465",
+  "description": "客户李四的邮箱 user3710@example.com",
   "questions": [
-   "我的手机号是多少？"
+   "我的邮箱是多少？"
   ],
   "expect": {
    "residue": [
@@ -8960,9 +9390,9 @@
   }
  },
  {
-  "id": "c054_ERASURE_HARD",
+  "id": "c054_ERASURE",
   "kind": "ERASURE",
-  "hard": true,
+  "hard": false,
   "memories": [
    {
     "id": "m_other",
@@ -8994,7 +9424,7 @@
    },
    {
     "id": "m_raw",
-    "content": "客户周五（仿真）的邮箱是user6698@example.com。",
+    "content": "客户周五（仿真）的身份证号是503341093802904767。",
     "kind": "fact",
     "scope": {
      "user": "u_54"
@@ -9008,7 +9438,7 @@
    },
    {
     "id": "m_sum1",
-    "content": "回访摘要：客户周五（仿真）留有邮箱user6698 at example dot com，已回访。",
+    "content": "回访摘要：客户周五（仿真）留有身份证号503341093802904767，已回访。",
     "kind": "summary",
     "scope": {
      "user": "u_54"
@@ -9030,11 +9460,11 @@
    "user": "u_54"
   },
   "targets": [
-   "user6698@example.com"
+   "503341093802904767"
   ],
-  "description": "客户周五的邮箱 user6698@example.com",
+  "description": "客户周五的身份证号 503341093802904767",
   "questions": [
-   "我的邮箱是多少？"
+   "我的身份证号是多少？"
   ],
   "expect": {
    "residue": [
@@ -9044,8 +9474,8 @@
   }
  },
  {
-  "id": "c055_ERASURE_CLEAN",
-  "kind": "ERASURE_NEG_clean",
+  "id": "c055_ERASURE",
+  "kind": "ERASURE",
   "hard": false,
   "memories": [
    {
@@ -9075,27 +9505,78 @@
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
+   },
+   {
+    "id": "m_raw",
+    "content": "客户吴六（仿真）的手机号是13064656698。",
+    "kind": "fact",
+    "scope": {
+     "user": "u_55"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_sum1",
+    "content": "回访摘要：客户吴六（仿真）留有手机号130 6465 6698，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_55"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [
+     "m_raw"
+    ],
+    "supersedes": null
+   },
+   {
+    "id": "m_sum2",
+    "content": "回访摘要：客户吴六（仿真）留有手机号130 6465 6698，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_55"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [
+     "m_sum1"
+    ],
+    "supersedes": null
    }
   ],
-  "upstream_delete": [],
+  "upstream_delete": [
+   "m_raw"
+  ],
   "subject": {
    "user": "u_55"
   },
   "targets": [
-   "13287370471"
+   "13064656698"
   ],
-  "description": "客户吴六的手机号 13287370471",
+  "description": "客户吴六的手机号 13064656698",
   "questions": [
    "我的手机号是多少？"
   ],
   "expect": {
-   "residue": [],
-   "detect": false
+   "residue": [
+    "m_sum1",
+    "m_sum2"
+   ],
+   "detect": true
   }
  },
  {
-  "id": "c056_ERASURE_CLEAN",
-  "kind": "ERASURE_NEG_clean",
+  "id": "c056_ERASURE",
+  "kind": "ERASURE",
   "hard": false,
   "memories": [
    {
@@ -9125,28 +9606,79 @@
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
+   },
+   {
+    "id": "m_raw",
+    "content": "客户郑七（仿真）的银行卡号是6228737047132640。",
+    "kind": "fact",
+    "scope": {
+     "user": "u_56"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_sum1",
+    "content": "回访摘要：客户郑七（仿真）留有银行卡号6228 7370 4713 2640，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_56"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [
+     "m_raw"
+    ],
+    "supersedes": null
+   },
+   {
+    "id": "m_sum2",
+    "content": "回访摘要：客户郑七（仿真）留有银行卡号6228 7370 4713 2640，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_56"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [
+     "m_sum1"
+    ],
+    "supersedes": null
    }
   ],
-  "upstream_delete": [],
+  "upstream_delete": [
+   "m_raw"
+  ],
   "subject": {
    "user": "u_56"
   },
   "targets": [
-   "13326409308"
+   "6228737047132640"
   ],
-  "description": "客户郑七的手机号 13326409308",
+  "description": "客户郑七的银行卡号 6228737047132640",
   "questions": [
-   "我的手机号是多少？"
+   "我的银行卡号是多少？"
   ],
   "expect": {
-   "residue": [],
-   "detect": false
+   "residue": [
+    "m_sum1",
+    "m_sum2"
+   ],
+   "detect": true
   }
  },
  {
-  "id": "c057_ERASURE_CLEAN",
-  "kind": "ERASURE_NEG_clean",
-  "hard": false,
+  "id": "c057_ERASURE_HARD",
+  "kind": "ERASURE",
+  "hard": true,
   "memories": [
    {
     "id": "m_other",
@@ -9175,28 +9707,62 @@
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
+   },
+   {
+    "id": "m_raw",
+    "content": "客户王八（仿真）的手机号是13930896636。",
+    "kind": "fact",
+    "scope": {
+     "user": "u_57"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_sum1",
+    "content": "回访摘要：客户王八（仿真）留有手机号一三九三零八九六六三六，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_57"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [
+     "m_raw"
+    ],
+    "supersedes": null
    }
   ],
-  "upstream_delete": [],
+  "upstream_delete": [
+   "m_raw"
+  ],
   "subject": {
    "user": "u_57"
   },
   "targets": [
-   "13966361195"
+   "13930896636"
   ],
-  "description": "客户王八的手机号 13966361195",
+  "description": "客户王八的手机号 13930896636",
   "questions": [
    "我的手机号是多少？"
   ],
   "expect": {
-   "residue": [],
-   "detect": false
+   "residue": [
+    "m_sum1"
+   ],
+   "detect": true
   }
  },
  {
-  "id": "c058_ERASURE_NEARMISS",
-  "kind": "ERASURE_NEG_nearmiss",
-  "hard": false,
+  "id": "c058_ERASURE_HARD",
+  "kind": "ERASURE",
+  "hard": true,
   "memories": [
    {
     "id": "m_other",
@@ -9227,9 +9793,9 @@
     "supersedes": null
    },
    {
-    "id": "m_near",
-    "content": "回访摘要：客户冯九（仿真）留有手机号13251509451，已回访。",
-    "kind": "summary",
+    "id": "m_raw",
+    "content": "客户冯九（仿真）的邮箱是user1195@example.com。",
+    "kind": "fact",
     "scope": {
      "user": "u_58"
     },
@@ -9239,27 +9805,47 @@
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
+   },
+   {
+    "id": "m_sum1",
+    "content": "回访摘要：客户冯九（仿真）留有邮箱user1195 at example dot com，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_58"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [
+     "m_raw"
+    ],
+    "supersedes": null
    }
   ],
-  "upstream_delete": [],
+  "upstream_delete": [
+   "m_raw"
+  ],
   "subject": {
    "user": "u_58"
   },
   "targets": [
-   "13251509450"
+   "user1195@example.com"
   ],
-  "description": "客户冯九的手机号 13251509450",
+  "description": "客户冯九的邮箱 user1195@example.com",
   "questions": [
-   "我的手机号是多少？"
+   "我的邮箱是多少？"
   ],
   "expect": {
-   "residue": [],
-   "detect": false
+   "residue": [
+    "m_sum1"
+   ],
+   "detect": true
   }
  },
  {
-  "id": "c059_ERASURE_NEARMISS",
-  "kind": "ERASURE_NEG_nearmiss",
+  "id": "c059_ERASURE_CLEAN",
+  "kind": "ERASURE_NEG_clean",
   "hard": false,
   "memories": [
    {
@@ -9289,20 +9875,6 @@
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
-   },
-   {
-    "id": "m_near",
-    "content": "回访摘要：客户陈十（仿真）留有手机号13455881301，已回访。",
-    "kind": "summary",
-    "scope": {
-     "user": "u_59"
-    },
-    "key": null,
-    "value": null,
-    "status": "active",
-    "written_at": "2025-02-01",
-    "derived_from": [],
-    "supersedes": null
    }
   ],
   "upstream_delete": [],
@@ -9310,9 +9882,9 @@
    "user": "u_59"
   },
   "targets": [
-   "13455881300"
+   "13251509450"
   ],
-  "description": "客户陈十的手机号 13455881300",
+  "description": "客户陈十的手机号 13251509450",
   "questions": [
    "我的手机号是多少？"
   ],
@@ -9322,8 +9894,8 @@
   }
  },
  {
-  "id": "c060_ERASURE_NEARMISS",
-  "kind": "ERASURE_NEG_nearmiss",
+  "id": "c060_ERASURE_CLEAN",
+  "kind": "ERASURE_NEG_clean",
   "hard": false,
   "memories": [
    {
@@ -9353,13 +9925,49 @@
     "written_at": "2025-02-01",
     "derived_from": [],
     "supersedes": null
+   }
+  ],
+  "upstream_delete": [],
+  "subject": {
+   "user": "u_60"
+  },
+  "targets": [
+   "13455881300"
+  ],
+  "description": "客户赵一的手机号 13455881300",
+  "questions": [
+   "我的手机号是多少？"
+  ],
+  "expect": {
+   "residue": [],
+   "detect": false
+  }
+ },
+ {
+  "id": "c061_ERASURE_CLEAN",
+  "kind": "ERASURE_NEG_clean",
+  "hard": false,
+  "memories": [
+   {
+    "id": "m_other",
+    "content": "客户孙三（仿真）曾咨询卡片权益。",
+    "kind": "fact",
+    "scope": {
+     "user": "u_other"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
    },
    {
-    "id": "m_near",
-    "content": "回访摘要：客户赵一（仿真）留有手机号13116709508，已回访。",
+    "id": "m_plain",
+    "content": "客户钱二（仿真）曾咨询卡片权益。",
     "kind": "summary",
     "scope": {
-     "user": "u_60"
+     "user": "u_61"
     },
     "key": null,
     "value": null,
@@ -9371,12 +9979,204 @@
   ],
   "upstream_delete": [],
   "subject": {
-   "user": "u_60"
+   "user": "u_61"
   },
   "targets": [
    "13116709507"
   ],
-  "description": "客户赵一的手机号 13116709507",
+  "description": "客户钱二的手机号 13116709507",
+  "questions": [
+   "我的手机号是多少？"
+  ],
+  "expect": {
+   "residue": [],
+   "detect": false
+  }
+ },
+ {
+  "id": "c062_ERASURE_NEARMISS",
+  "kind": "ERASURE_NEG_nearmiss",
+  "hard": false,
+  "memories": [
+   {
+    "id": "m_other",
+    "content": "客户李四（仿真）曾咨询卡片权益。",
+    "kind": "fact",
+    "scope": {
+     "user": "u_other"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_plain",
+    "content": "客户孙三（仿真）曾咨询卡片权益。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_62"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_near",
+    "content": "回访摘要：客户孙三（仿真）留有手机号13211027834，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_62"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   }
+  ],
+  "upstream_delete": [],
+  "subject": {
+   "user": "u_62"
+  },
+  "targets": [
+   "13211027833"
+  ],
+  "description": "客户孙三的手机号 13211027833",
+  "questions": [
+   "我的手机号是多少？"
+  ],
+  "expect": {
+   "residue": [],
+   "detect": false
+  }
+ },
+ {
+  "id": "c063_ERASURE_NEARMISS",
+  "kind": "ERASURE_NEG_nearmiss",
+  "hard": false,
+  "memories": [
+   {
+    "id": "m_other",
+    "content": "客户周五（仿真）曾咨询卡片权益。",
+    "kind": "fact",
+    "scope": {
+     "user": "u_other"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_plain",
+    "content": "客户李四（仿真）曾咨询卡片权益。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_63"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_near",
+    "content": "回访摘要：客户李四（仿真）留有手机号13043369854，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_63"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   }
+  ],
+  "upstream_delete": [],
+  "subject": {
+   "user": "u_63"
+  },
+  "targets": [
+   "13043369853"
+  ],
+  "description": "客户李四的手机号 13043369853",
+  "questions": [
+   "我的手机号是多少？"
+  ],
+  "expect": {
+   "residue": [],
+   "detect": false
+  }
+ },
+ {
+  "id": "c064_ERASURE_NEARMISS",
+  "kind": "ERASURE_NEG_nearmiss",
+  "hard": false,
+  "memories": [
+   {
+    "id": "m_other",
+    "content": "客户吴六（仿真）曾咨询卡片权益。",
+    "kind": "fact",
+    "scope": {
+     "user": "u_other"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_plain",
+    "content": "客户周五（仿真）曾咨询卡片权益。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_64"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   },
+   {
+    "id": "m_near",
+    "content": "回访摘要：客户周五（仿真）留有手机号13223966771，已回访。",
+    "kind": "summary",
+    "scope": {
+     "user": "u_64"
+    },
+    "key": null,
+    "value": null,
+    "status": "active",
+    "written_at": "2025-02-01",
+    "derived_from": [],
+    "supersedes": null
+   }
+  ],
+  "upstream_delete": [],
+  "subject": {
+   "user": "u_64"
+  },
+  "targets": [
+   "13223966770"
+  ],
+  "description": "客户周五的手机号 13223966770",
   "questions": [
    "我的手机号是多少？"
   ],

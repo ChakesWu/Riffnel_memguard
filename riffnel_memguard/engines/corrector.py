@@ -8,7 +8,7 @@ from ..core.audit import AuditLog
 from ..core.models import Action, Finding, MemoryRecord, Plan, sha256_json
 from ..core.models import scope_compatible  # noqa: F401
 from ..extract.rules import memory_claim
-from .investigator import _derived_closure
+from .linker import derived_closure as _derived_closure
 
 
 def _id(prefix: str, seed: str) -> str:
@@ -46,6 +46,14 @@ def make_plan(findings: list[Finding], store, incident_id: str | None, clauses_b
         elif f.cls == "M3":
             add(Action(type="rescope", target=rec.id, payload={
                 "scope": f.evidence["target_scope"], "previous_scope": rec.scope}))
+        elif f.cls == "M2":
+            if f.evidence.get("authoritative_memory"):
+                add(Action(type="invalidate", target=rec.id, payload={
+                    "reason": f"conflicts with {f.evidence['authoritative_memory']}, which matches the source"}))
+                for d in derived:
+                    add(Action(type="purge_derived", target=d, payload={"mode": "invalidate"}))
+            else:  # the source cannot pick a winner: hold for human review
+                add(Action(type="quarantine", target=rec.id, payload={"reason": "M2: no memory matches the source"}))
         elif f.cls in ("M4", "M6"):
             add(Action(type="quarantine", target=rec.id, payload={"reason": f.cls}))
         elif f.cls == "M5":

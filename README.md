@@ -76,6 +76,16 @@ Web 界面（黑白，需 `pip install -e ".[ui]"`）：`riffnel-memguard ui`，
 
 场景二用 `simulate-delete m_phone_raw`、`erase --subject user=u_demo --target 13800000000` 代替 `ask`/`investigate`/`plan`；来源更新后用 `revalidate --as-of <日期>`。
 
+## 溯源、影响分析与体检
+
+```bash
+riffnel-memguard link                          # 记忆 → 条款版本（explicit / key_match / semantic）
+riffnel-memguard impact cv_gw_1                # 某条款版本影响哪些记忆、派生记忆、测试题
+riffnel-memguard scan --as-of 2026-09-01       # 不等事故：找出过期(M1)、冲突(M2)、无来源(M4)，生成方案
+```
+
+语义链接的相似度阈值默认 0.2，是未经验证的起始值（仿真数据中改写后的摘要得分约 0.26–0.28）。冲突（M2）只在同键、同作用域、多条有效记忆取值不同、且落败者不是「被取代的旧版本」时报告；来源无法裁定时隔离待人工复核。
+
 ## 与 memwall 配合（M6 投毒）
 
 本项目不做写入扫描。可用 [memwall](https://github.com/gbayerv26/memwall)（MIT，独立项目，`pip install ".[memwall]"`）扫描，再导入结果：
@@ -101,16 +111,17 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 
 ## 基准集（仿真）
 
-`riffnel-memguard benchmark` 运行 60 个仿真用例（42 个事故、18 个删除），结果见 [benchmark/RESULTS.md](benchmark/RESULTS.md)，用例由 `benchmark/generate.py` 以固定种子生成。
+`riffnel-memguard benchmark` 运行 64 个仿真用例（46 个事故、18 个删除），结果见 [benchmark/RESULTS.md](benchmark/RESULTS.md)，用例由 `benchmark/generate.py` 以固定种子生成。
 
-读数前提：用例由项目维护者自行设计，事故回答由有问题的记忆脚本化生成，样本很小。结果表示流程在这些情形下能走通，**不代表真实环境的准确率**。已知弱点也列在结果里：中文数字、邮箱混淆等改写形式探测不到；语义层探测对「相差一位的其他号码」会误报。
+读数前提：用例由项目维护者自行设计，事故回答由有问题的记忆脚本化生成，样本很小。结果表示流程在这些情形下能走通，**不代表真实环境的准确率**。已知弱点也列在结果里：中文数字、邮箱混淆等改写形式探测不到；语义层探测对「相差一位的其他号码」的得分（0.35–0.37）已逼近阈值 0.4：用例重新生成前（姓名分配不同）同一份探测代码曾误报 2/6，重新生成后为 0/6，说明该层对数据敏感，当前数字不应被理解为稳定的误报率。
 
 ## 当前已实现 / 未实现
 
 | 已实现 | 未实现 |
 |---|---|
-| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、规则抽取、字符 n-gram TF-IDF 检索 | SQLite 适配器、溯源链接器（Linker） |
-| 调查：M1 过期、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | M2 冲突 |
+| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、规则抽取、字符 n-gram TF-IDF 检索 | SQLite 适配器、Mem0 / Letta 适配器 |
+| 调查：M1 过期、M2 冲突、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | 向量相似度（仅字符 n-gram）、LLM 抽取 |
+| 溯源链接（显式 / 主题键 / 语义）、影响分析、记忆体检 `scan`（M1+M2+M4） | |
 | 修正：预演、审批、应用、回滚（删除不可回滚） | 其他外部扫描工具的导入；memwall `forget-check` 的交叉校验 |
 | 导入 memwall 扫描结果为 M6（已用真实 memwall 0.6.1 端到端测试） | |
 | 验证：重放、回归、四层残留探测、来源更新后重新验证 | HTML 报告 |

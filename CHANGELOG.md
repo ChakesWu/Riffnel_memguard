@@ -8,3 +8,4 @@
 - Streamlit 界面（黑白）；流程逻辑抽到 `service` 模块，CLI 与界面共用。
 - Dockerfile、docker-compose、CI 镜像构建任务；示例数据移入包内（`riffnel_memguard/examples`），支持非 editable 安装。
 - memwall 集成：`export-memwall` / `import-memwall`（M6），含真实 memwall 0.6.1 端到端测试。
+- 溯源链接器、影响分析、M2 冲突检测、`link`/`impact`/`scan` 命令；基准集增至 64 例（新增 M2 与溯源指标）。

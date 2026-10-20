@@ -10,7 +10,7 @@ from .adapters.base import JsonFileStore
 from .agent.bank import BankAssistAgent
 from .core.audit import AuditLog
 from .core.models import Clause, Incident, MemoryRecord, TestCase
-from .engines import corrector, investigator, verifier
+from .engines import corrector, investigator, linker, verifier
 
 
 def _store(case, tmp: Path) -> JsonFileStore:
@@ -35,6 +35,9 @@ def run_incident(case, tmp: Path) -> dict:
         return r
     r["attributed"] = set(exp["ids"]) <= set(r["ids"])
     r["class_ok"] = set(r["classes"]) == {exp["cls"]}
+    if case["kind"].startswith("M1"):
+        links, _ = linker.link(store, clauses)
+        r["link_ok"] = any(l.memory_id == "m_bad" and l.clause_version_id == "cv_0_1" for l in links)
     agent = BankAssistAgent(store)
     pre = {t["id"] for t in verifier.regression(agent, tests, set())["cases"] if t["passed"]}
     by_key = {c.key: c for c in clauses}
@@ -115,6 +118,7 @@ def render(res: dict) -> str:
          f"| 归因：责任记忆被找到 | {_rate(inc, 'attributed')} |",
          f"| 分类：类别完全正确 | {_rate(inc, 'class_ok')} |",
          f"| 误报：无错用例（含无法归因）未产生发现 | {_rate(inc, 'no_false_alarm')} |",
+         f"| 溯源：过期记忆被链接到正确的旧版本（M1 类） | {_rate(inc, 'link_ok')} |",
          f"| 修正后重放通过 | {_rate(inc, 'replay_ok')} |",
          f"| 回归无退化（修正前通过的题仍通过） | {_rate(inc, 'no_degradation')} |",
          f"| 派生摘要被清理 | {_rate(inc, 'derived_purged')} |",
@@ -133,7 +137,7 @@ def render(res: dict) -> str:
           f"| 困难用例残留被准确定位 | {_rate(hard, 'located_ok')} |", ""]
     bad = []
     for r in rows:
-        fails = [k for k in ("attributed", "class_ok", "no_false_alarm", "replay_ok", "no_degradation", "derived_purged",
+        fails = [k for k in ("link_ok", "attributed", "class_ok", "no_false_alarm", "replay_ok", "no_degradation", "derived_purged",
                              "rescoped_ok", "audit_ok", "detected", "located_ok", "clean_after") if k in r and not r[k]]
         if fails:
             bad.append(f"- `{r['id']}`{'（困难）' if r['hard'] else ''}：未通过 {', '.join(fails)}；"

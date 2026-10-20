@@ -32,6 +32,7 @@ class MemoryRecord(BaseModel):
     written_at: str = ""
     derived_from: list[str] = Field(default_factory=list)
     supersedes: Optional[str] = None
+    source_ref: Optional[str] = None  # explicit clause-version id, if the writer recorded one
 
     def sha(self) -> str:
         return sha256_json(self.model_dump())
@@ -64,6 +65,13 @@ class Clause(BaseModel):
 
     def superseded_at(self, date: str) -> list[ClauseVersion]:
         return [v for v in self.versions if v.valid_to is not None and v.valid_to < date]
+
+
+class ProvenanceLink(BaseModel):
+    memory_id: str
+    clause_version_id: str
+    method: Literal["explicit", "key_match", "semantic"]
+    confidence: float
 
 
 class Source(BaseModel):

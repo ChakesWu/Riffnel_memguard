@@ -16,5 +16,5 @@ def test_cases_file_matches_generator():
 
 def test_benchmark_runs_and_results_file_is_current():
     res = benchmark.run(ROOT / "benchmark" / "cases.json")
-    assert res["n_cases"] == 60
+    assert res["n_cases"] == len(json.loads((ROOT / "benchmark" / "cases.json").read_text(encoding="utf-8")))
     assert benchmark.render(res).rstrip("\n") == (ROOT / "benchmark" / "RESULTS.md").read_text(encoding="utf-8").rstrip("\n")

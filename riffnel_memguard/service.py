@@ -7,7 +7,7 @@ from .adapters import memwall as memwall_io
 from .agent.bank import BankAssistAgent
 from .core.models import Finding, Incident, Plan
 from .core.workspace import Workspace
-from .engines import corrector, investigator, verifier
+from .engines import corrector, investigator, linker, verifier
 from .probes.erasure import mask
 from .report.markdown import build
 
@@ -168,3 +168,34 @@ def import_memwall(w: Workspace, report_path: Path, min_severity: str = "medium"
 
 def export_memwall(w: Workspace, path: Path) -> int:
     return memwall_io.export_for_scan(w.store, path)
+
+
+def link(w: Workspace) -> tuple[list, list]:
+    links, unsupported = linker.link(w.store, w.clauses)
+    st = w.state()
+    st["links"] = [l.model_dump() for l in links]
+    w.save_state(st)
+    return links, unsupported
+
+
+def impact(w: Workspace, version_id: str) -> dict:
+    links, _ = linker.link(w.store, w.clauses)
+    try:
+        return linker.impact(version_id, links, w.store, w.clauses, w.tests)
+    except StopIteration:
+        raise KeyError(f"unknown clause version {version_id}")
+
+
+def scan(w: Workspace, as_of: str) -> tuple[list[Finding], str | None]:
+    """Memory health scan without an incident: M1 stale, M2 conflict, M4 unsupported."""
+    links, unsupported = linker.link(w.store, w.clauses)
+    m1 = linker.stale_findings(links, w.store, w.clauses, as_of)
+    m2 = linker.conflict_findings(w.store, w.clauses, as_of)
+    taken = {f.memory_id for f in m1 + m2}
+    m4 = linker.unsupported_findings(unsupported, w.store, taken)
+    fs = m1 + m2 + m4
+    if not fs:
+        return [], None
+    st = w.state()
+    p = corrector.make_plan(fs, w.store, None, {c.key: c for c in w.clauses}, as_of)
+    return fs, _register(w, st, p, fs, as_of, source="scan")

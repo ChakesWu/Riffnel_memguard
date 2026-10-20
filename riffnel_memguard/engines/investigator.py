@@ -10,13 +10,7 @@ from ..probes.erasure import l1_exact, l2_variant, mask
 INJECTION = re.compile(r"(忽略(以上|之前|先前)|无视.*指令|ignore (all )?(previous|above)|system prompt)", re.I)
 
 
-def _derived_closure(store, root_ids: set[str]) -> set[str]:
-    out, frontier = set(), set(root_ids)
-    while frontier:
-        nxt = {r.id for r in store.list() if set(r.derived_from) & frontier} - out
-        out |= nxt
-        frontier = nxt
-    return out
+from .linker import authoritative_peer, derived_closure as _derived_closure, link as _link, stale_findings  # noqa: E402
 
 
 def investigate(incident: Incident, store, clauses: list[Clause]) -> list[Finding]:
@@ -64,7 +58,12 @@ def investigate(incident: Incident, store, clauses: list[Clause]) -> list[Findin
                 findings.append(Finding(cls="M1", memory_id=mid, incident_id=incident.id, confidence=0.95,
                                         evidence={**ev, "stale_version": old[0].version}))
             else:
-                findings.append(Finding(cls="M4", memory_id=mid, incident_id=incident.id, confidence=0.6, evidence=ev))
+                peer = authoritative_peer(store, clause, rec, claim.value, incident.occurred_at)
+                if peer:  # order M2 before M4: the source (via the peer memory) settles which one is right
+                    findings.append(Finding(cls="M2", memory_id=mid, incident_id=incident.id, confidence=0.85,
+                                            evidence={**ev, "authoritative_memory": peer}))
+                else:
+                    findings.append(Finding(cls="M4", memory_id=mid, incident_id=incident.id, confidence=0.6, evidence=ev))
 
     for mid in incident.retrieved_ids:
         rec = store.get(mid)
@@ -87,20 +86,6 @@ def investigate_erasure(store, targets: list[str]) -> list[Finding]:
 
 
 def revalidate(store, clauses: list[Clause], as_of: str) -> list[Finding]:
-    """After a source update: active memories still holding a superseded value (no incident needed)."""
-    findings = []
-    for clause in clauses:
-        current = clause.version_at(as_of)
-        if current is None:
-            continue
-        stale_values = {v.value: v for v in clause.superseded_at(as_of)}
-        for rec in store.list():
-            if rec.status != "active" or not scope_compatible(rec.scope, clause.scope):
-                continue
-            mc = memory_claim(rec, clause)
-            if mc and mc.value != current.value and mc.value in stale_values:
-                findings.append(Finding(cls="M1", memory_id=rec.id, confidence=0.9, evidence={
-                    "key": clause.key, "memory_text": rec.content, "stale_version": stale_values[mc.value].version,
-                    "valid_version": current.version, "valid_value": current.value, "valid_text": current.text,
-                    "trigger": "source_update"}))
-    return findings
+    """After a source update: active memories linked to a superseded version (no incident needed)."""
+    links, _ = _link(store, clauses)
+    return stale_findings(links, store, clauses, as_of)
