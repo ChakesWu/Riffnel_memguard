@@ -1,5 +1,5 @@
-import memguard
+import riffnel_memguard
 
 
 def test_version():
-    assert memguard.__version__
+    assert riffnel_memguard.__version__

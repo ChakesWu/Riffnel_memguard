@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "memguard"
+name = "riffnel-memguard"
 version = "0.1.0.dev0"
 description = "Memory error investigation and correction verification for AI agents"
 readme = "README.md"
@@ -22,10 +22,10 @@ ui = ["streamlit"]
 dev = ["pytest"]
 
 [project.scripts]
-memguard = "memguard.cli:app"
+riffnel-memguard = "riffnel_memguard.cli:app"
 
 [tool.setuptools.packages.find]
-include = ["memguard*"]
+include = ["riffnel_memguard*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

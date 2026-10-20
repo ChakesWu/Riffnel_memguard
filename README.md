@@ -1,27 +1,30 @@
-# MemGuard
+# Riffnel_memguard
 
 > 面向 AI 智能体的记忆错误调查与修正验证平台
 > Memory error investigation and correction verification for AI agents
 
 **状态：设计与开发中（v0.1-draft）。** 本仓库目前只有项目说明，代码、部署流程与演示将陆续补充。
 
+> 原名 MemGuard。因已有同领域同名开源项目（[ac12644/MemGuard](https://github.com/ac12644/MemGuard)）及同名学术论文（[Jia 等，CCS 2019](https://arxiv.org/pdf/1909.10594)），改名为 Riffnel_memguard。本项目与它们均无关联。
+
 ## 它是什么
 
-MemGuard **不存储记忆**。它接在现有记忆库（Mem0、Letta、自研 JSON/SQLite 存储等）之上：
+Riffnel_memguard **不存储记忆**。它接在现有记忆库（Mem0、Letta、自研 JSON/SQLite 存储等）之上：
 
 1. 智能体答错时，查出是哪条记忆导致、为什么错；
 2. 生成可审批、非破坏性的修正方案；
-3. 用可重现的测试证明「错误已消失、且没有引入新错误」，并输出带校验链的证据报告。
+3. 用可重现的测试验证「错误已消失、且没有引入新错误」，并输出带校验链的证据报告。
 
-可以理解为：记忆的「事故调查 + 修正验收」层。
+## 与现有项目的关系
 
-## 三个核心点
+溯源、审计、来源漂移检测、回滚、残留检查，现有开源项目已各自实现一部分（逐项核实见 [docs/COMPETITORS.md](docs/COMPETITORS.md)）。本项目不重做这些，差异在于**把它们组合为面向事故的流程**：
 
-| 点 | 说明 |
+| 组合点 | 说明 |
 |---|---|
-| 权威来源版本为基准 | 以制度、条款的版本检查记忆；来源更新即触发影响分析与重新验证 |
-| 调查 → 修正 → 验证闭环 | 修正必须通过重放、回归、残留探测才算完成 |
-| 删除验证 | 四层残留探测：精确、变形、语义、行为 |
+| 条款版本基准 | 按事故发生时间，判定当时有效的条款版本与作用域，据此归因 |
+| 根因分类 M1–M6 | 过期、冲突、串用、无来源写入、应删未删、投毒 |
+| 修正后批量回归 | 沿溯源图谱选出受影响题目全部重跑，而不只重放原事故 |
+| 多层残留探测 | 精确、变形、语义、行为四层，覆盖派生摘要 |
 
 ## 记忆错误分类
 
@@ -43,20 +46,6 @@ MemGuard **不存储记忆**。它接在现有记忆库（Mem0、Letta、自研 
 
 非侵入、证据优先、非破坏性修正、人在回路、默认离线且确定性运行（LLM 为可选）、可重现、适配器可扩展。
 
-## 治理与贡献
-
-[CONTRIBUTING](CONTRIBUTING.md) · [GOVERNANCE](GOVERNANCE.md) · [SECURITY](SECURITY.md) · [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
-
-## 路线图
-
-详见 [ROADMAP.md](ROADMAP.md)。
-
-| 版本 | 时间 | 内容 |
-|---|---|---|
-| v0.1 | 2026-10-31 | 调查、修正、验证、报告；两个演示场景；仿真基准集 |
-| v0.2 | 2026-12 | Letta 适配器；REST API |
-| v0.3 | 2027 Q1 | 持续监控；更多探测方法 |
-
 ## 快速开始 / 部署
 
 待补充。
@@ -64,6 +53,14 @@ MemGuard **不存储记忆**。它接在现有记忆库（Mem0、Letta、自研 
 ## 许可证
 
 [Apache-2.0](LICENSE)
+
+## 治理与贡献
+
+[CONTRIBUTING](CONTRIBUTING.md) · [GOVERNANCE](GOVERNANCE.md) · [SECURITY](SECURITY.md) · [CODE_OF_CONDUCT](CODE_OF_CONDUCT.md)
+
+## 路线图
+
+详见 [ROADMAP.md](ROADMAP.md)。
 
 ## 声明
 
