@@ -235,6 +235,17 @@ def demo(scenario: str = typer.Argument(..., help="stale | erasure"),
     raise typer.Exit(0 if result["passed"] else 1)
 
 
+@app.command()
+def benchmark(cases: Path = typer.Option(Path("benchmark/cases.json")),
+              out: Optional[Path] = typer.Option(None, help="Write the Markdown results here")):
+    """Run the simulated benchmark and print the results."""
+    from . import benchmark as bm
+    md = bm.render(bm.run(cases))
+    if out:
+        out.write_text(md.rstrip("\n") + "\n", encoding="utf-8")
+    typer.echo(md)
+
+
 @audit_app.command("verify")
 def audit_verify(db: Path):
     """Verify the hash chain of an audit database."""

@@ -28,6 +28,22 @@ def investigate(incident: Incident, store, clauses: list[Clause]) -> list[Findin
 
     for claim in claims:
         clause = by_key[claim.key]
+        if not scope_compatible(clause.scope, incident.scope):
+            # the claim is about another scope (product/user/region): compare with the sibling clause that fits
+            sib = next((c for c in clauses if c.topic and c.topic == clause.topic and c.id != clause.id
+                        and scope_compatible(c.scope, incident.scope)), None)
+            sv = sib.version_at(incident.occurred_at) if sib else None
+            if sv is None or sv.value == claim.value:
+                continue
+            for mid in incident.retrieved_ids:
+                rec = store.get(mid)
+                mc = memory_claim(rec, clause) if rec else None
+                if mc is not None and mc.value == claim.value:
+                    findings.append(Finding(cls="M3", memory_id=mid, incident_id=incident.id, confidence=0.9, evidence={
+                        "claim": claim.span, "memory_text": rec.content, "valid_version": sv.version,
+                        "valid_value": sv.value, "valid_text": sv.text, "memory_scope": rec.scope,
+                        "incident_scope": incident.scope, "target_scope": clause.scope}))
+            continue
         current = clause.version_at(incident.occurred_at)
         if current is None or claim.value == current.value:
             continue
@@ -42,19 +58,13 @@ def investigate(incident: Incident, store, clauses: list[Clause]) -> list[Findin
             ev = {
                 "claim": claim.span, "memory_text": rec.content,
                 "valid_version": current.version, "valid_value": current.value,
-                "valid_text": current.text,
+                "valid_text": current.text, "key": clause.key,
             }
-            if not scope_compatible(rec.scope, incident.scope) or (
-                rec.scope and any(k not in incident.scope for k in rec.scope)
-            ):
-                findings.append(Finding(cls="M3", memory_id=mid, incident_id=incident.id, confidence=0.9,
-                                        evidence={**ev, "memory_scope": rec.scope, "incident_scope": incident.scope}))
-            elif old:
+            if old:
                 findings.append(Finding(cls="M1", memory_id=mid, incident_id=incident.id, confidence=0.95,
-                                        evidence={**ev, "stale_version": old[0].version, "key": clause.key}))
+                                        evidence={**ev, "stale_version": old[0].version}))
             else:
-                findings.append(Finding(cls="M4", memory_id=mid, incident_id=incident.id, confidence=0.6,
-                                        evidence={**ev, "key": clause.key}))
+                findings.append(Finding(cls="M4", memory_id=mid, incident_id=incident.id, confidence=0.6, evidence=ev))
 
     for mid in incident.retrieved_ids:
         rec = store.get(mid)

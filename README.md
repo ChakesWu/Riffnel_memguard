@@ -74,6 +74,12 @@ riffnel-memguard audit verify .riffnel/audit.db
 
 场景二用 `simulate-delete m_phone_raw`、`erase --subject user=u_demo --target 13800000000` 代替 `ask`/`investigate`/`plan`；来源更新后用 `revalidate --as-of <日期>`。部署流程（Docker 等）待补充。
 
+## 基准集（仿真）
+
+`riffnel-memguard benchmark` 运行 60 个仿真用例（42 个事故、18 个删除），结果见 [benchmark/RESULTS.md](benchmark/RESULTS.md)，用例由 `benchmark/generate.py` 以固定种子生成。
+
+读数前提：用例由项目维护者自行设计，事故回答由有问题的记忆脚本化生成，样本很小。结果表示流程在这些情形下能走通，**不代表真实环境的准确率**。已知弱点也列在结果里：中文数字、邮箱混淆等改写形式探测不到；语义层探测对「相差一位的其他号码」会误报。
+
 ## 当前已实现 / 未实现
 
 | 已实现 | 未实现 |
@@ -81,7 +87,7 @@ riffnel-memguard audit verify .riffnel/audit.db
 | 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、规则抽取、字符 n-gram TF-IDF 检索 | SQLite 适配器、溯源链接器（Linker） |
 | 调查：M1 过期、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | M2 冲突 |
 | 修正：预演、审批、应用、回滚（删除不可回滚） | 导入 memwall 等外部扫描结果 |
-| 验证：重放、回归、四层残留探测、来源更新后重新验证 | HTML 报告、Web 界面、基准集 |
+| 验证：重放、回归、四层残留探测、来源更新后重新验证 | HTML 报告、Web 界面 |
 | CLI 分步命令、Markdown 证据报告（个人信息遮罩） | |
 
 ## 许可证

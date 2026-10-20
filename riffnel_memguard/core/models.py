@@ -50,6 +50,7 @@ class Clause(BaseModel):
     id: str
     key: str
     title: str
+    topic: Optional[str] = None
     scope: dict[str, str] = Field(default_factory=dict)
     unit: str
     keywords: list[str]

@@ -15,3 +15,4 @@ jobs:
       - run: pytest
       - run: riffnel-memguard demo stale
       - run: riffnel-memguard demo erasure
+      - run: riffnel-memguard benchmark

@@ -6,6 +6,8 @@ from datetime import datetime, timezone
 
 from ..core.audit import AuditLog
 from ..core.models import Action, Finding, MemoryRecord, Plan, sha256_json
+from ..core.models import scope_compatible  # noqa: F401
+from ..extract.rules import memory_claim
 from .investigator import _derived_closure
 
 
@@ -32,14 +34,18 @@ def make_plan(findings: list[Finding], store, incident_id: str | None, clauses_b
             clause = clauses_by_key[f.evidence["key"]]
             cur = clause.version_at(as_of)
             add(Action(type="invalidate", target=rec.id, payload={"reason": f"superseded by {cur.version}"}))
-            new = MemoryRecord(id=_id("mem", rec.id + cur.id), content=cur.text, kind="fact", scope=rec.scope,
-                               key=clause.key, value=cur.value, written_at=as_of, supersedes=rec.id)
-            add(Action(type="add", target=new.id, payload={"record": new.model_dump()}))
+            exists = any(r.status == "active" and r.id != rec.id and r.scope == rec.scope
+                         and (mc := memory_claim(r, clause)) is not None and mc.value == cur.value
+                         for r in store.list())
+            if not exists:
+                new = MemoryRecord(id=_id("mem", rec.id + cur.id), content=cur.text, kind="fact", scope=rec.scope,
+                                   key=clause.key, value=cur.value, written_at=as_of, supersedes=rec.id)
+                add(Action(type="add", target=new.id, payload={"record": new.model_dump()}))
             for d in derived:
                 add(Action(type="purge_derived", target=d, payload={"mode": "invalidate"}))
         elif f.cls == "M3":
-            add(Action(type="advice", target=rec.id, payload={
-                "text": "memory scope differs from the incident scope; enforce scope filtering at retrieval"}))
+            add(Action(type="rescope", target=rec.id, payload={
+                "scope": f.evidence["target_scope"], "previous_scope": rec.scope}))
         elif f.cls in ("M4", "M6"):
             add(Action(type="quarantine", target=rec.id, payload={"reason": f.cls}))
         elif f.cls == "M5":
@@ -105,6 +111,8 @@ def rollback(plan: Plan, store, audit: AuditLog, by: str) -> list[str]:
             store.restore(a.target)
         elif a.type == "add":
             store.delete(a.target)
+        elif a.type == "rescope":
+            store.rescope(a.target, a.payload["previous_scope"])
         elif a.type in ("delete", "purge_derived"):
             skipped.append(a.target)
         audit.append(by, f"rollback:{a.type}", "memory", a.target or "")
