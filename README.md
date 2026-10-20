@@ -76,6 +76,18 @@ Web 界面（黑白，需 `pip install -e ".[ui]"`）：`riffnel-memguard ui`，
 
 场景二用 `simulate-delete m_phone_raw`、`erase --subject user=u_demo --target 13800000000` 代替 `ask`/`investigate`/`plan`；来源更新后用 `revalidate --as-of <日期>`。
 
+## 与 memwall 配合（M6 投毒）
+
+本项目不做写入扫描。可用 [memwall](https://github.com/gbayerv26/memwall)（MIT，独立项目，`pip install ".[memwall]"`）扫描，再导入结果：
+
+```bash
+riffnel-memguard export-memwall out.json           # 导出工作区记忆
+memwall scan out.json --json report.json           # 退出码 1 表示有发现，属正常
+riffnel-memguard import-memwall report.json --min-severity medium   # 生成 M6 隔离方案
+```
+
+记忆按 id 匹配，id 不同时退回「内容完全相同且唯一」匹配，匹配不到的会列出。memwall 的 JSON 结构 README 未说明，导入器按 memwall 0.6.1 实际输出编写（测试夹具见 `tests/fixtures/`）；其他版本未验证。memwall 的置信度只是按严重度映射的启发式值（0.3–0.7）。
+
 ## 部署（Docker）
 
 ```bash
@@ -99,7 +111,8 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 |---|---|
 | 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、规则抽取、字符 n-gram TF-IDF 检索 | SQLite 适配器、溯源链接器（Linker） |
 | 调查：M1 过期、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | M2 冲突 |
-| 修正：预演、审批、应用、回滚（删除不可回滚） | 导入 memwall 等外部扫描结果 |
+| 修正：预演、审批、应用、回滚（删除不可回滚） | 其他外部扫描工具的导入；memwall `forget-check` 的交叉校验 |
+| 导入 memwall 扫描结果为 M6（已用真实 memwall 0.6.1 端到端测试） | |
 | 验证：重放、回归、四层残留探测、来源更新后重新验证 | HTML 报告 |
 | CLI 分步命令、Markdown 证据报告（个人信息遮罩）、Streamlit 界面 | |
 

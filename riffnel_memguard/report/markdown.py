@@ -43,6 +43,8 @@ def build(plan: dict, state: dict, events: list[tuple]) -> str:
             L.append(f"  - 当时有效条款（{ev['valid_version']}）：{ev['valid_text']}")
         if "stale_version" in ev:
             L.append(f"  - 记忆对应旧版本：{ev['stale_version']}")
+        if ev.get("rules"):
+            L.append(f"  - 外部扫描（{ev.get('source')} {ev.get('memwall_version')}，严重度 {ev.get('severity')}）：{'; '.join(ev['rules'])}")
         if ev.get("match"):
             L.append(f"  - 残留匹配方式：{ev['match']}；目标 {ev['targets_masked']}")
     L += ["", "## 4. 修正方案", ""]

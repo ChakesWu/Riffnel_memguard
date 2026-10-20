@@ -82,6 +82,25 @@ def erase(subject: list[str] = typer.Option(..., "--subject", help="key=value sc
     typer.echo(f"发现 {len(fs)} 处残留，方案 {pid}" if fs else "未发现残留。")
 
 
+@app.command("export-memwall")
+def export_memwall(out: Path, ws: Path = WS_OPT):
+    """Write the workspace memories in a shape `memwall scan` reads."""
+    n = service.export_memwall(Workspace(ws), out)
+    typer.echo(f"已导出 {n} 条到 {out}；下一步：memwall scan {out} --json report.json")
+
+
+@app.command("import-memwall")
+def import_memwall(report: Path, min_severity: str = typer.Option("medium", help="info|low|medium|high|critical"),
+                   ws: Path = WS_OPT):
+    """Import a `memwall scan --json PATH` report as M6 findings and draft a quarantine plan."""
+    fs, unmatched, pid = _call(service.import_memwall, Workspace(ws), report, min_severity)
+    for f in fs:
+        typer.echo(f"M6 {f.memory_id}（memwall {f.evidence['severity']}）：{', '.join(f.evidence['rules'])}")
+    if unmatched:
+        typer.echo(f"未能匹配到本工作区记忆：{', '.join(unmatched)}")
+    typer.echo(f"方案 {pid}" if pid else "没有需要处理的发现。")
+
+
 @app.command("simulate-delete")
 def simulate_delete(memory_id: str, ws: Path = WS_OPT):
     """Delete one record directly, imitating an upstream deletion that missed derived copies."""

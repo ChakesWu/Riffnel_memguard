@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from .adapters import memwall as memwall_io
 from .agent.bank import BankAssistAgent
 from .core.models import Finding, Incident, Plan
 from .core.workspace import Workspace
@@ -152,3 +153,18 @@ def report(w: Workspace, plan_id: str) -> Path:
     out.parent.mkdir(exist_ok=True)
     out.write_text(md, encoding="utf-8")
     return out
+
+
+def import_memwall(w: Workspace, report_path: Path, min_severity: str = "medium") -> tuple[list[Finding], list[str], str | None]:
+    """Turn a memwall scan report into M6 findings and a quarantine plan."""
+    report = memwall_io.load_report(report_path)
+    fs, unmatched = memwall_io.to_findings(report, w.store, min_severity)
+    if not fs:
+        return [], unmatched, None
+    st = w.state()
+    p = corrector.make_plan(fs, w.store, None, {}, "")
+    return fs, unmatched, _register(w, st, p, fs, "", source="memwall")
+
+
+def export_memwall(w: Workspace, path: Path) -> int:
+    return memwall_io.export_for_scan(w.store, path)

@@ -19,6 +19,7 @@ dependencies = [
 
 [project.optional-dependencies]
 ui = ["streamlit"]
+memwall = ["memwall"]
 dev = ["pytest"]
 
 [project.scripts]

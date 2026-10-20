@@ -10,6 +10,14 @@
 | typed-recall | 适配器：`trace(answer)` 取得溯源，`forget(node_id)` 执行删除 | **中。** 溯源能直接填充本项目的检索记录与溯源图谱 | Python 示例仅有 `observe`、`bounded_generate`、`trace`、`forget`；本地 SQLite（默认 `~/.recall`）；有 MCP `audit` 工具 | **README 未写明如何列出全部记忆与节点 ID**，`trace` 入参是回答对象而非 ID，适配器能否实现 `list/search` 未知；性能数字为自述 |
 | Aegis Memory | 适配器：`add`、`hybrid_query`；读取 `is_deprecated` 与来源记录 | **低到中。** 偏多智能体上下文工程，且它自带冲突扫描与合并 | `AegisClient.add/hybrid_query/scan_contradictions/consolidate_memories`；`scope`、`namespace`、`trust_level` 字段；记忆有 HMAC 签名来源记录 | README 未列 list、delete、显式废弃接口，事件日志无导出方法与格式；有两个同名项目，须确认是 quantifylabs 版 |
 
+## 更新（memwall 已实现）
+
+2026-10-20 已实现 memwall 报告导入，并用 PyPI 上的 memwall 0.6.1 实际验证：
+- `memwall scan PATH --json REPORT`：`--json` 需要路径参数（README 写成开关，与实际不符）；有发现时退出码为 1。
+- 报告字段：`memwall_version`、`records[].id/severity/content/findings[]{rule,name,severity,message}`。
+- PyPI 版本为 0.6.1，GitHub README 描述的是 0.7.1，两者可能有差异；0.7.x 未验证。
+- `forget-check` 只输出文本，没有 JSON，因此尚未做交叉校验。
+
 ## 建议顺序
 
 1. **memwall 结果导入**：与 M6 直接对应，且只依赖文件格式，v0.1 就可做。
