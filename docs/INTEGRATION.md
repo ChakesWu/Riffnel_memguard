@@ -26,6 +26,14 @@
 - `add(messages, *, user_id, agent_id, run_id, metadata, timestamp, expiration_date, infer=True, ...)`：`infer=False` 可能允许直接写入原文，**未验证**。
 - 因此适配器所需的 `list/get/search/add/delete/update` 都有对应接口，`invalidate` 可退化为「删除 + 新增 + 记录」或写 `expiration_date`/metadata。已实现 `Mem0Adapter` 并在真实 Mem0 2.2.1 + 本地 Qdrant 上端到端运行（嵌入器与 LLM 用离线替身，见 README）；`invalidate` 通过更新元数据 `rf_status` 实现，`search` 带 `rf_status=active` 过滤。
 
+## Letta：未实现（2026-10-20 尝试结果）
+
+- `letta-client` 1.12.1（Apache-2.0）可安装，接口含 `blocks`（create/list/retrieve/update/delete）与 `agents.passages`。
+- 要测试适配器必须有 Letta 服务端。最新 `letta` 0.34.12 的 `letta server` 已变成连接 Letta Cloud 的接收端，不是本地 REST 服务。
+- 改装 `letta==0.16.7`（仍带本地 REST）：依赖在 2026 年的环境里已漂移，依次缺 `asyncpg`、`mcp.shared.exceptions.McpError`（新版 `mcp` 已改名）、`fastmcp` 客户端、`IdentityAssertionParams`，连续 5 次尝试仍无法启动。
+- 即使启动，创建智能体、写入归档记忆（passages）还需要 LLM 与嵌入服务，当前网络白名单不允许。
+- 因此**没有写 Letta 适配器**：没有真实运行过的适配器不应作为「已支持」交付。下一步需要：固定一组可用的依赖版本，或使用 Letta Cloud 账号并放行其域名。
+
 ## 建议顺序
 
 1. **memwall 结果导入**：与 M6 直接对应，且只依赖文件格式，v0.1 就可做。

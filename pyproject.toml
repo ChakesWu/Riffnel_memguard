@@ -21,7 +21,7 @@ dependencies = [
 ui = ["streamlit"]
 memwall = ["memwall"]
 mem0 = ["mem0ai"]
-agent = ["pydantic-ai-slim"]
+agent = ["pydantic-ai-slim[openai]"]
 dev = ["pytest"]
 
 [project.scripts]

@@ -15,7 +15,7 @@ from .core.audit import AuditLog
 from .core.models import MemoryRecord, Source, TestCase
 from .demo import EXAMPLES
 from .engines import corrector, investigator, verifier
-from .probes.erasure import mask
+from .probes.erasure import bytes_residue, mask
 
 
 def _stack(workdir: Path):
@@ -27,17 +27,6 @@ def _stack(workdir: Path):
     clauses = [c for s in sources for c in s.clauses]
     tests = [TestCase(**t) for t in json.loads((EXAMPLES / "tests.json").read_text(encoding="utf-8"))]
     return store, EnterpriseBankAgent(store), clauses, tests, AuditLog(workdir / "audit.db")
-
-
-def bytes_residue(root: Path, needles: list[str]) -> list[str]:
-    """Independent check: files under `root` whose raw bytes still contain a needle (exact or spaced/variant)."""
-    hits = []
-    for f in sorted(root.rglob("*")):
-        if f.is_file():
-            data = f.read_bytes()
-            if any(n.encode() in data for n in needles):
-                hits.append(str(f.relative_to(root)))
-    return hits
 
 
 def run_stale(workdir: Path, log=print) -> dict:

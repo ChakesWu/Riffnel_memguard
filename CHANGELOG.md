@@ -11,3 +11,4 @@
 - 溯源链接器、影响分析、M2 冲突检测、`link`/`impact`/`scan` 命令；基准集增至 64 例（新增 M2 与溯源指标）。
 - 修复：规则抽取支持中文数字（三笔）；残留探测规范化覆盖中文数字与 at/dot 写法（困难用例 0/2 → 2/2）；语义层 L3 降为人工复核提示（近似号码用例误报 6/12）；README 中 Docker 状态更正（CI 已构建并跑通）。基准集增至 74 例。
 - 真实堆栈：Mem0 适配器、Pydantic AI 企业客服智能体、检索追踪、`demo real-stale` / `real-erasure`；残留探测纳入 Mem0 历史库；修复修正方案重复新增/停用；强制关闭 Mem0 遥测。
+- SQLite 适配器（可映射已有表）与 `demo sqlite-stale/sqlite-erasure`；`agent` extra 含 openai 以支持 `deepseek:` 等模型串；记录 Letta 无法在当前环境验证的原因。

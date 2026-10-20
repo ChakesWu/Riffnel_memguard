@@ -77,3 +77,16 @@ def run_probe(store, agent, scope, targets, description, probe_questions) -> dic
     result["clean"] = not any(result[k] for k in ("L1_exact", "L2_variant", "L4_behavior"))
     result["needs_review"] = bool(result["L3_semantic"])
     return result
+
+
+def bytes_residue(root, needles: list[str]) -> list[str]:
+    """Independent check that does not use the probes above: files under `root` whose raw bytes contain a needle."""
+    from pathlib import Path
+    root = Path(root)
+    hits = []
+    for f in sorted(root.rglob("*")):
+        if f.is_file():
+            data = f.read_bytes()
+            if any(n.encode() in data for n in needles):
+                hits.append(str(f.relative_to(root)))
+    return hits

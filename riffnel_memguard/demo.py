@@ -15,10 +15,17 @@ from .probes.erasure import mask
 EXAMPLES = Path(__file__).resolve().parent / "examples" / "bank"
 
 
-def _setup(workdir: Path):
+def _setup(workdir: Path, store_kind: str = "json"):
     workdir.mkdir(parents=True, exist_ok=True)
     shutil.copy(EXAMPLES / "memories.json", workdir / "memories.json")
-    store = JsonFileStore(workdir / "memories.json")
+    if store_kind == "sqlite":
+        from .adapters.sqlite_store import SQLiteStore
+        from .core.models import MemoryRecord
+        store = SQLiteStore(workdir / "memories.db")
+        for m in json.loads((workdir / "memories.json").read_text(encoding="utf-8")):
+            store.add(MemoryRecord(**m))
+    else:
+        store = JsonFileStore(workdir / "memories.json")
     sources = [Source(**s) for s in json.loads((EXAMPLES / "sources.json").read_text(encoding="utf-8"))]
     clauses = [c for s in sources for c in s.clauses]
     tests = [TestCase(**t) for t in json.loads((EXAMPLES / "tests.json").read_text(encoding="utf-8"))]
@@ -26,9 +33,9 @@ def _setup(workdir: Path):
     return store, clauses, tests, audit
 
 
-def run_stale(workdir: Path, log=print) -> dict:
+def run_stale(workdir: Path, log=print, store_kind: str = "json") -> dict:
     """Scenario 1: gold-card waiver changed from 3 to 6 transactions on 2026-07-01; agent still says 3."""
-    store, clauses, tests, audit = _setup(workdir)
+    store, clauses, tests, audit = _setup(workdir, store_kind)
     agent = BankAssistAgent(store)
     by_key = {c.key: c for c in clauses}
     scope, occurred, as_of = {"product": "gold_card"}, "2026-08-10", "2026-09-01"
@@ -62,9 +69,9 @@ def run_stale(workdir: Path, log=print) -> dict:
             "passed": bool(findings) and rep["passed"] and reg["passed"] and ok}
 
 
-def run_erasure(workdir: Path, log=print) -> dict:
+def run_erasure(workdir: Path, log=print, store_kind: str = "json") -> dict:
     """Scenario 2: the raw phone record was deleted, but a derived summary still holds the number."""
-    store, clauses, tests, audit = _setup(workdir)
+    store, clauses, tests, audit = _setup(workdir, store_kind)
     agent = BankAssistAgent(store)
     scope, targets = {"user": "u_demo"}, ["13800000000"]
     desc, questions = "客户张三的手机号 13800000000", ["我的手机号是多少？"]
