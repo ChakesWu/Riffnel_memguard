@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .adapters import memwall as memwall_io
 from .agent.bank import BankAssistAgent
+from .agent.command import CommandAgent
 from .core.models import Finding, Incident, Plan
 from .core.workspace import Workspace
 from .engines import corrector, investigator, linker, verifier
@@ -36,12 +37,19 @@ def _incident(st: dict, iid: str) -> Incident:
     return Incident(**{k: v for k, v in st["incidents"][iid].items() if k in INCIDENT_KEYS})
 
 
-def ask(w: Workspace, question: str, scope: dict, at: str) -> str:
-    answer, retrieved = BankAssistAgent(w.store).answer(question, scope)
+def make_agent(w: Workspace, agent_cmd: str | None = None, timeout: float = 60.0):
+    """The agent under test: an external command (see agent/command.py) or the built-in reference agent."""
+    return CommandAgent(agent_cmd, timeout=timeout) if agent_cmd else BankAssistAgent(w.store)
+
+
+def ask(w: Workspace, question: str, scope: dict, at: str, agent_cmd: str | None = None, timeout: float = 60.0) -> str:
+    answer, retrieved = make_agent(w, agent_cmd, timeout).answer(question, scope)
     st = w.state()
     iid = f"inc_{len(st['incidents']) + 1:03d}"
-    st["incidents"][iid] = Incident(id=iid, occurred_at=at, agent_id="bank-bot", scope=scope, question=question,
-                                    answer=answer, retrieved_ids=retrieved).model_dump()
+    st["incidents"][iid] = Incident(id=iid, occurred_at=at, agent_id="agent-cmd" if agent_cmd else "bank-bot", scope=scope,
+                                    question=question, answer=answer, retrieved_ids=retrieved).model_dump()
+    if agent_cmd:  # verification replays the same agent unless told otherwise
+        st["incidents"][iid]["agent_cmd"], st["incidents"][iid]["agent_timeout"] = agent_cmd, timeout
     w.save_state(st)
     return iid
 
@@ -127,10 +135,13 @@ def rollback(w: Workspace, plan_id: str, by: str) -> list[str]:
     return skipped
 
 
-def verify(w: Workspace, plan_id: str, questions: list[str]) -> dict:
+def verify(w: Workspace, plan_id: str, questions: list[str], agent_cmd: str | None = None,
+           timeout: float | None = None) -> dict:
     st = w.state()
     p = get_plan(st, plan_id)
-    agent, res = BankAssistAgent(w.store), {}
+    inc = st["incidents"].get(p.get("incident_id") or "", {})
+    cmd = agent_cmd or inc.get("agent_cmd")
+    agent, res = make_agent(w, cmd, timeout or inc.get("agent_timeout", 60.0)), {}
     affected = {f["evidence"]["key"] for f in p["findings"] if "key" in f["evidence"]}
     if p.get("incident_id"):
         res["replay"] = verifier.replay(agent, _incident(st, p["incident_id"]), w.clauses, p["as_of"])

@@ -75,3 +75,31 @@ def test_real_embedder_stale_scenario(tmp_path, monkeypatch):
     pytest.importorskip("fastembed")
     monkeypatch.setenv("RIFFNEL_EMBEDDER", "fastembed")
     assert demo_real.run_stale(tmp_path, log=lambda *_: None)["passed"]
+
+
+def test_listing_grows_until_complete_and_never_truncates_silently(tmp_path):
+    from riffnel_memguard.adapters.mem0_adapter import MemoryListingTruncated
+    small = Mem0Adapter(make_offline_memory(tmp_path / "m"), agent_id="t", page_size=2, max_items=8)
+    for i in range(5):
+        small.add(rec(f"p{i}", f"事实{i}号", scope={"product": "x"}))
+    assert sorted(r.id for r in small.list()) == [f"p{i}" for i in range(5)]  # needed limits 2 -> 4 -> 8
+    tight = Mem0Adapter(small.m, agent_id="t", page_size=2, max_items=4)
+    with pytest.raises(MemoryListingTruncated):
+        tight.list()  # 5 memories do not fit in 4: fail loudly instead of returning 4
+
+
+def test_lookup_by_planned_id_does_not_list_everything(store, monkeypatch):
+    for i in range(6):
+        store.add(rec(f"p{i}", f"事实{i}号"))
+    monkeypatch.setattr(store, "_items", lambda: (_ for _ in ()).throw(AssertionError("listed everything")))
+    assert store.get("p3").content == "事实3号"
+    assert store.get("missing") is None
+    store.invalidate("p3", "x")  # uses _resolve, not a full listing
+    assert store.get("p3").status == "invalidated"
+
+
+def test_untested_mem0_version_warns(store, monkeypatch):
+    import mem0
+    monkeypatch.setattr(mem0, "__version__", "9.9.9")
+    with pytest.warns(RuntimeWarning, match="not been tested"):
+        Mem0Adapter(store.m, agent_id="t")

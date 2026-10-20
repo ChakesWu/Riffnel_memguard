@@ -11,14 +11,23 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sqlite3
 import sys
+import warnings
 from pathlib import Path
 from typing import Any, Optional
 
 from ..core.models import MemoryRecord, scope_compatible
 
 TRACE = "trace:"
+TESTED_MEM0_PREFIX = "2.2."  # mem0ai 2.2.x is what this adapter was run against; other versions may change the API
+_UUID = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$")
+
+
+class MemoryListingTruncated(RuntimeError):
+    """Mem0 returned as many memories as the limit allows, so the listing may be incomplete."""
+
 _RF = ("rf_status", "rf_kind", "rf_key", "rf_value", "rf_derived_from", "rf_supersedes", "rf_source_ref",
        "rf_written_at", "rf_planned_id")
 
@@ -109,10 +118,22 @@ class Mem0Adapter:
     name = "mem0"
 
     def __init__(self, memory, agent_id: str = "riffnel", history_db: Optional[str | Path] = None,
-                 max_items: int = 10000):
+                 max_items: int = 100_000, page_size: int = 500):
+        """`max_items` bounds how many memories one listing may return; reaching it raises MemoryListingTruncated
+        instead of silently returning a partial list. Mem0's `get_all` has no offset or cursor, so a listing asks for
+        `page_size` items and doubles the limit until the answer is smaller than the limit."""
+        try:
+            import mem0
+            version = getattr(mem0, "__version__", "unknown")
+            if not str(version).startswith(TESTED_MEM0_PREFIX):
+                warnings.warn(f"mem0ai {version} has not been tested with this adapter (tested: {TESTED_MEM0_PREFIX}x)",
+                              RuntimeWarning, stacklevel=2)
+        except ImportError:
+            pass
         self.m = memory
         self.agent_id = agent_id
         self.max_items = max_items
+        self.page_size = max(1, page_size)
         self.history_db = Path(history_db or getattr(getattr(memory, "config", None), "history_db_path", "") or "")
 
     # -- conversion -------------------------------------------------------------------------------
@@ -128,15 +149,31 @@ class Mem0Adapter:
             derived_from=md.get("rf_derived_from") or [], supersedes=md.get("rf_supersedes"),
             source_ref=md.get("rf_source_ref"))
 
-    def _items(self) -> list[dict]:
-        res = self.m.get_all(filters={"agent_id": self.agent_id}, top_k=self.max_items)
+    def _get_all(self, extra: Optional[dict], limit: int) -> list[dict]:
+        filters = {"agent_id": self.agent_id, **(extra or {})}
+        res = self.m.get_all(filters=filters, top_k=limit, show_expired=True)
         return res["results"] if isinstance(res, dict) else res
 
+    def _items(self) -> list[dict]:
+        limit = min(self.page_size, self.max_items)
+        while True:
+            items = self._get_all(None, limit)
+            if len(items) < limit:
+                return items
+            if limit >= self.max_items:
+                raise MemoryListingTruncated(
+                    f"Mem0 returned {len(items)} memories for agent_id={self.agent_id!r}, the adapter's max_items; "
+                    "the listing may be incomplete. Raise max_items or partition the data by agent_id.")
+            limit = min(limit * 2, self.max_items)
+
     def _resolve(self, external_id: str) -> Optional[dict]:
-        for it in self._items():
-            if external_id in (it["id"], (it.get("metadata") or {}).get("rf_planned_id")):
+        """Find one memory by Mem0 id or by the id Riffnel planned for it, without listing everything."""
+        if _UUID.match(external_id):
+            it = self.m.get(external_id)
+            if it and it.get("agent_id") == self.agent_id:
                 return it
-        return None
+        hits = self._get_all({"rf_planned_id": external_id}, 2)
+        return hits[0] if hits else None
 
     def _meta(self, rec: MemoryRecord) -> dict:
         md = {k: v for k, v in rec.scope.items() if k != "user"}

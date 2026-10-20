@@ -26,6 +26,17 @@
 - `add(messages, *, user_id, agent_id, run_id, metadata, timestamp, expiration_date, infer=True, ...)`：`infer=False` 可能允许直接写入原文，**未验证**。
 - 因此适配器所需的 `list/get/search/add/delete/update` 都有对应接口，`invalidate` 可退化为「删除 + 新增 + 记录」或写 `expiration_date`/metadata。已实现 `Mem0Adapter` 并在真实 Mem0 2.2.1 + 本地 Qdrant 上端到端运行（嵌入器与 LLM 用离线替身，见 README）；`invalidate` 通过更新元数据 `rf_status` 实现，`search` 带 `rf_status=active` 过滤。
 
+## 已测试的版本
+
+| 组件 | 范围（pyproject 中的 extra） | 实际测试版本 |
+|---|---|---|
+| mem0ai | `>=2.2.1,<2.3` | 2.2.1（适配器启动时对非 2.2.x 版本发出警告） |
+| pydantic-ai-slim | `>=2.58,<3` | 2.58.0 |
+| fastembed | `>=0.9,<0.10` | 0.9.0 |
+| memwall | `>=0.6.1,<0.7` | 0.6.1 |
+
+范围是「已测试版本所在的小版本」，不代表该范围内的每个版本都测过。
+
 ## Letta：未实现（2026-10-20 尝试结果）
 
 - `letta-client` 1.12.1（Apache-2.0）可安装，接口含 `blocks`（create/list/retrieve/update/delete）与 `agents.passages`。

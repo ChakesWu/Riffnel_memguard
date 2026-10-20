@@ -76,6 +76,30 @@ Web 界面（黑白，需 `pip install -e ".[ui]"`）：`riffnel-memguard ui`，
 
 场景二用 `simulate-delete m_phone_raw`、`erase --subject user=u_demo --target 13800000000` 代替 `ask`/`investigate`/`plan`；来源更新后用 `revalidate --as-of <日期>`。
 
+## 接入你自己的智能体（`--agent-cmd`）
+
+任何语言写的智能体都可以被调查和验证，只要它遵守一个很小的协议：从标准输入读一行 JSON，向标准输出写一行 JSON。
+
+```bash
+riffnel-memguard ask "金卡免年费需要刷几笔？" --scope product=gold_card --at 2026-08-10 \
+    --agent-cmd "node examples/agent_cmd/agent.js .riffnel/memories.json"
+riffnel-memguard investigate inc_001 && riffnel-memguard plan inc_001 --as-of 2026-09-01   # …approve / apply
+riffnel-memguard verify plan_xxxx     # 重放与回归默认沿用 ask 时的同一个智能体，也可 --agent-cmd 指定
+```
+
+| 方向 | 内容 |
+|---|---|
+| 标准输入 | `{"question": "...", "scope": {"product": "gold_card"}}`（一行） |
+| 标准输出 | **最后一个非空行**是 `{"answer": "...", "retrieved_ids": ["id1", "id2"]}`；之前打印的日志会被忽略 |
+| 退出码 | 0 表示成功，否则报错并显示 stderr 末尾；`--agent-timeout` 限制每次调用秒数（默认 60） |
+
+要点与限制：
+- `retrieved_ids` 必须是被调查的记忆库里的真实 id，否则无法归因；也就是说，智能体读的记忆库和 Riffnel 的适配器要指向同一份数据（验证修正时智能体必须读到修正后的数据）。
+- 命令用 shlex 拆分后**不经过 shell** 执行，但它以你的权限运行，是受信任的配置，不要用不可信输入拼接。
+- 每次调用启动一个新进程，适合验收与回归，不适合高频调用。
+- 参考实现：`riffnel_memguard/agent/stdio_agent.py`（Python）与 `examples/agent_cmd/agent.js`（Node.js，与本项目代码无关，已完整跑通调查、修正、重放、回归）。
+- 目前只有命令行支持，Web 界面仍使用内置智能体。
+
 ## SQLite 适配器
 
 `SQLiteStore` 可直接读写已有的 SQLite 表（列名可配置，只要求 `id` 与 `content`），也可新建参考表；表名与列名会校验，防止注入。没有 `status` 列时无法停用或隔离记忆（调用会报错）。
@@ -147,7 +171,8 @@ docker run --rm $(docker build -q .) riffnel-memguard demo stale   # 只跑命�
 
 | 已实现 | 未实现 |
 |---|---|
-| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、**SQLite 适配器**、**Mem0 适配器**、规则抽取、字符 n-gram TF-IDF 检索 | Letta 适配器（见 docs/INTEGRATION.md） |
+| 数据模型、哈希链审计日志（含篡改检测）、JSON 参考适配器、**SQLite 适配器**、**Mem0 适配器**、规则抽取、字符 n-gram TF-IDF 检索 | Letta 适配器（见 docs/INTEGRATION.md）；Web 界面接入外部智能体 |
+| `--agent-cmd`：任意语言的外部智能体（含 Node.js 实例）接入重放与回归 | |
 | Pydantic AI 企业客服智能体 + 检索追踪（真实 DeepSeek 模型下 `real-stale` 已验证；离线替身用于 CI） | M2、M3 的真实模型验证；更多嵌入模型 |
 | 调查：M1 过期、M2 冲突、M3 串用、M4 无来源、M5 应删未删、M6 投毒（仅基础启发式） | 向量相似度（仅字符 n-gram）、LLM 抽取 |
 | 溯源链接（显式 / 主题键 / 语义）、影响分析、记忆体检 `scan`（M1+M2+M4） | |

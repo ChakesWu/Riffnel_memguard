@@ -10,6 +10,7 @@ import typer
 
 from . import demo as demo_mod
 from . import service
+from .agent.command import AgentCommandError
 from .core.audit import AuditLog
 from .core.workspace import Workspace
 from .report.markdown import mask_text
@@ -28,7 +29,7 @@ def _scope(items: list[str]) -> dict:
 def _call(fn, *a, **k):
     try:
         return fn(*a, **k)
-    except (KeyError, ValueError, PermissionError) as e:
+    except (KeyError, ValueError, PermissionError, AgentCommandError) as e:
         raise typer.BadParameter(str(e).strip("'"))
 
 
@@ -41,10 +42,13 @@ def init(ws: Path = WS_OPT, example: bool = typer.Option(True, help="Copy the si
 
 @app.command()
 def ask(question: str, scope: list[str] = typer.Option(..., "--scope", help="key=value, repeatable"),
-        at: str = typer.Option(..., help="Incident date, YYYY-MM-DD"), ws: Path = WS_OPT):
-    """Ask the reference agent and record the exchange as an incident."""
+        at: str = typer.Option(..., help="Incident date, YYYY-MM-DD"),
+        agent_cmd: Optional[str] = typer.Option(None, "--agent-cmd", help="Run your own agent: see agent/command.py"),
+        agent_timeout: float = typer.Option(60.0, "--agent-timeout", help="Seconds allowed per agent call"),
+        ws: Path = WS_OPT):
+    """Ask the reference agent (or your own, with --agent-cmd) and record the exchange as an incident."""
     w = Workspace(ws)
-    iid = service.ask(w, question, _scope(scope), at)
+    iid = _call(service.ask, w, question, _scope(scope), at, agent_cmd, agent_timeout)
     typer.echo(f"{iid}\n答：{w.state()['incidents'][iid]['answer']}")
 
 
@@ -162,9 +166,11 @@ def rollback(plan_id: str, by: str = typer.Option(...), ws: Path = WS_OPT):
 
 
 @app.command()
-def verify(plan_id: str, question: list[str] = typer.Option(["我的手机号是多少？"], "--question"), ws: Path = WS_OPT):
-    """Run replay + regression (incident plans) or the four-layer probe (erasure plans)."""
-    res = _call(service.verify, Workspace(ws), plan_id, question)
+def verify(plan_id: str, question: list[str] = typer.Option(["我的手机号是多少？"], "--question"),
+           agent_cmd: Optional[str] = typer.Option(None, "--agent-cmd", help="Agent to replay with (default: the one used by `ask`)"),
+           agent_timeout: Optional[float] = typer.Option(None, "--agent-timeout"), ws: Path = WS_OPT):
+    """Run replay + regression (incident plans) or the residue probe (erasure plans)."""
+    res = _call(service.verify, Workspace(ws), plan_id, question, agent_cmd, agent_timeout)
     for k, v in res.items():
         typer.echo(f"{k}: {'通过' if v['passed'] else '失败'}")
         if v.get("needs_review"):
