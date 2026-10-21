@@ -104,11 +104,21 @@ def scan(as_of: str = typer.Option(...), ws: Path = WS_OPT):
 
 @app.command()
 def erase(subject: list[str] = typer.Option(..., "--subject", help="key=value scope of the data subject"),
-          target: list[str] = typer.Option(..., "--target", help="Exact value that must be gone, repeatable"),
+          target: list[str] = typer.Option([], "--target", help="Exact value that must be gone, repeatable. It lands in your "
+                                           "shell history and the process list: prefer --target-file"),
+          target_file: Optional[Path] = typer.Option(None, "--target-file", help="File with one target value per line"),
           description: str = typer.Option("", help="Text used for the semantic probe"),
           ws: Path = WS_OPT):
     """Register an erasure request, look for residue, and draft a plan."""
-    fs, pid = service.erase(Workspace(ws), _scope(subject), target, description)
+    targets = list(target)
+    if target_file:
+        try:
+            targets += [ln.strip() for ln in target_file.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        except OSError as e:
+            raise typer.BadParameter(f"cannot read {target_file}: {e}")
+    if not targets:
+        raise typer.BadParameter("give at least one --target or --target-file")
+    fs, pid = service.erase(Workspace(ws), _scope(subject), targets, description)
     typer.echo(f"发现 {len(fs)} 处残留，方案 {pid}" if fs else "未发现残留。")
 
 
@@ -135,8 +145,9 @@ def import_memwall(report: Path, min_severity: str = typer.Option("medium", help
 def simulate_delete(memory_id: str, ws: Path = WS_OPT):
     """Delete one record directly, imitating an upstream deletion that missed derived copies."""
     w = Workspace(ws)
-    w.store.delete(memory_id)
-    w.audit.append("system", "upstream_delete", "memory", memory_id)
+    with w.transaction():
+        w.store.delete(memory_id)
+        w.audit.append("system", "upstream_delete", "memory", memory_id)
     typer.echo(f"已删除 {memory_id}")
 
 
@@ -155,8 +166,13 @@ def approve(plan_id: str, by: str = typer.Option(...), ws: Path = WS_OPT):
 
 @app.command()
 def apply(plan_id: str, ws: Path = WS_OPT):
-    _call(service.apply, Workspace(ws), plan_id)
+    """Apply an approved plan, or resume a partially applied one (status apply_failed)."""
+    summary = _call(service.apply, Workspace(ws), plan_id)
     typer.echo(f"{plan_id} 已应用")
+    if summary["targets_pending"]:
+        typer.echo(f"已清除工作区状态中含目标值的 {summary['scrubbed_strings']} 处文本，删除含目标值的报告 "
+                   f"{len(summary['reports_removed'])} 份。目标值仍暂存在 secrets/（权限 0600），运行 verify 通过后会自动清除；"
+                   "不想验证则运行 erase-discard。")
 
 
 @app.command()
@@ -176,6 +192,12 @@ def verify(plan_id: str, question: list[str] = typer.Option(["我的手机号是
         if v.get("needs_review"):
             typer.echo(f"  语义层（L3）提示，待人工复核：{[i for i, _ in v['L3_semantic']]}")
     raise typer.Exit(0 if all(v["passed"] for v in res.values()) else 1)
+
+
+@app.command("erase-discard")
+def erase_discard(erasure_id: str, ws: Path = WS_OPT):
+    """Drop the stored target values of an erasure request without verifying."""
+    typer.echo("已丢弃目标值" if _call(service.erase_discard, Workspace(ws), erasure_id) else "没有暂存的目标值")
 
 
 @app.command()
@@ -244,11 +266,24 @@ def benchmark(cases: Path = typer.Option(Path("benchmark/cases.json")),
 
 
 @audit_app.command("verify")
-def audit_verify(db: Path):
-    """Verify the hash chain of an audit database."""
-    ok, bad = AuditLog(db).verify()
-    typer.echo("OK" if ok else f"TAMPERED at seq {bad}")
+def audit_verify(db: Path, key_env: str = typer.Option("RIFFNEL_AUDIT_KEY", help="Environment variable holding the HMAC key")):
+    """Verify the hash chain, and the HMAC of every event when a key is available."""
+    key = os.environ.get(key_env)
+    log = AuditLog(db, key=key)
+    ok, bad = log.verify()
+    if ok and not key:
+        typer.echo("OK（仅哈希链：没有提供密钥，持有文件写权限的人可以重写整条链）" if not log.signed else
+                   "OK（哈希链；事件带有 HMAC，但未提供密钥，未校验）")
+    else:
+        typer.echo("OK（哈希链与 HMAC）" if ok else f"TAMPERED at seq {bad}")
     raise typer.Exit(0 if ok else 1)
+
+
+@audit_app.command("head")
+def audit_head(db: Path):
+    """Print the newest event's sequence number and hash, to be published where the operator cannot edit it."""
+    seq, h = AuditLog(db).head()
+    typer.echo(f"{seq} {h}")
 
 
 if __name__ == "__main__":

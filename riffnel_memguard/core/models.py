@@ -118,11 +118,14 @@ class Action(BaseModel):
 
 
 class Plan(BaseModel):
+    """draft -> approved -> applied (or apply_failed, resumable) -> rolled_back -> approved again."""
     id: str
     incident_id: Optional[str] = None
     actions: list[Action]
-    status: Literal["draft", "approved", "applied", "rolled_back"] = "draft"
+    status: Literal["draft", "approved", "applied", "apply_failed", "rolled_back"] = "draft"
+    created_by: Optional[str] = None
     approved_by: Optional[str] = None
+    journal: list[int] = Field(default_factory=list)  # indices of actions already carried out
 
 
 class TestCase(BaseModel):

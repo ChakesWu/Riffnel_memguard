@@ -16,4 +16,5 @@
 - 真实嵌入器（Mem0 fastembed + BAAI/bge-small-zh-v1.5）与真实 DeepSeek 模型组合验证两个场景；`make_memory(embedder=...)`；真实堆栈失败时给出更准确的错误说明。
 - `--agent-cmd`：以命令接入任意语言的外部智能体（`ask`/`verify`），含参考实现与 Node.js 示例；Mem0 适配器不再静默截断（自适应放大上限，到顶报错）、单条查找不列全表、启动时检查版本；extras 固定到已测试的小版本。
 - Letta 适配器（归档记忆，标签保存字段、替换式修改、游标分页）、`demo letta-stale/letta-erasure`、真实 Letta 服务端上的 6 项集成测试与可复现的测试环境脚本；Web 界面可接入外部智能体（默认关闭，防远程执行）。
+- 安全与可靠性修复（对照工具自己的说法检查得出）：删除后清除工作区内的目标值副本（`secrets/` 暂存、`state.json` 与报告清除）、强制方案状态机与审批人政策、日志式可恢复应用、文件锁与原子写入、审计 HMAC 与链头、`--target-file`、邮箱遮罩；14 项回归测试。
 - 修复：`agent` extra 的版本固定按 Python 版本分别设置（pydantic-ai-slim 2.55 起要求 Python 3.11，原固定使 Python 3.10 无法安装）。

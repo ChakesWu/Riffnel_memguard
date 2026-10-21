@@ -66,11 +66,17 @@ def plan_panel(w: Workspace, plan_id: str) -> None:
     c1, c2, c3, c4 = st.columns(4)
     by = st.text_input("审批人", key=f"by_{plan_id}")
     if c1.button("审批", key=f"approve_{plan_id}") and by:
-        service.approve(w, plan_id, by)
-        st.rerun()
-    if c2.button("应用", key=f"apply_{plan_id}"):
-        if guarded(service.apply, w, plan_id) is None and service.get_plan(w.state(), plan_id)["status"] == "applied":
+        if guarded(service.approve, w, plan_id, by) is None and service.get_plan(w.state(), plan_id)["status"] == "approved":
             st.rerun()
+    if c2.button("应用", key=f"apply_{plan_id}"):
+        summary = guarded(service.apply, w, plan_id)
+        if summary is not None:
+            if summary["targets_pending"]:
+                st.session_state["scrub_note"] = (f"已清除工作区状态中含目标值的 {summary['scrubbed_strings']} 处文本，删除含目标值的报告 "
+                                                  f"{len(summary['reports_removed'])} 份。")
+            st.rerun()
+        elif service.get_plan(w.state(), plan_id)["status"] == "apply_failed":
+            st.warning("应用中途失败，方案处于 apply_failed。修复原因后再次点击「应用」会从断点继续，或点击「回滚」撤销已完成的部分。")
     if c3.button("验证", key=f"verify_{plan_id}"):
         stored = state["incidents"].get(p.get("incident_id") or "", {}).get("agent_cmd")
         cmd, timeout = agent_settings_cache()
@@ -81,8 +87,17 @@ def plan_panel(w: Workspace, plan_id: str) -> None:
             guarded(service.verify, w, plan_id, ["我的手机号是多少？"], cmd, timeout if cmd else None)
             st.rerun()
     if c4.button("回滚", key=f"rollback_{plan_id}") and by:
-        skipped = service.rollback(w, plan_id, by)
-        st.info(f"无法回滚的删除：{skipped}" if skipped else "已回滚")
+        skipped = guarded(service.rollback, w, plan_id, by)
+        if skipped is not None:
+            st.info(f"无法回滚的删除：{skipped}" if skipped else "已回滚")
+    if st.session_state.get("scrub_note"):
+        st.info(st.session_state["scrub_note"])
+    er_id = p.get("erasure_id")
+    if er_id and w.get_secret(er_id):
+        st.caption("目标值暂存在工作区 secrets/（权限 0600），验证通过后自动清除。")
+        if st.button("丢弃目标值（不再验证）", key=f"discard_{plan_id}"):
+            service.erase_discard(w, er_id)
+            st.rerun()
     ver = state["verifications"].get(plan_id, {})
     for k, v in ver.items():
         (st.success if v["passed"] else st.error)(f"{k}：{'通过' if v['passed'] else '失败'}")

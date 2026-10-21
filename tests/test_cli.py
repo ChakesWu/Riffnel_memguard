@@ -55,3 +55,12 @@ def test_no_attribution_message(tmp_path):
     ok(run(app, ["init", *ws]))
     ok(run(app, ["ask", "金卡年费是多少？", "--scope", "product=gold_card", "--at", "2026-08-10", *ws]))
     assert "无法归因" in ok(run(app, ["investigate", "inc_001", *ws]))
+
+
+def test_every_documented_command_exists():
+    """Guards against a refactor silently removing a command the README promises."""
+    from typer.main import get_command
+    documented = {"init", "ask", "investigate", "plan", "diff", "approve", "apply", "rollback", "verify", "report",
+                  "revalidate", "erase", "erase-discard", "simulate-delete", "export-memwall", "import-memwall", "link",
+                  "impact", "scan", "benchmark", "demo", "ui", "audit"}
+    assert documented <= set(get_command(app).commands)

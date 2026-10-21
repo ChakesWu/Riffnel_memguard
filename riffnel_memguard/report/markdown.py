@@ -9,8 +9,13 @@ from ..probes.erasure import mask
 _LONG_NUM = re.compile(r"\d[\d ]{6,}\d")
 
 
+_EMAIL = re.compile(r"([\w.+-])[\w.+-]*@([\w-]+(?:\.[\w-]+)+)")
+
+
 def mask_text(text: str) -> str:
-    return _LONG_NUM.sub(lambda m: mask(m.group(0).replace(" ", "")), text)
+    """Mask long digit runs (phone, card and id numbers) and e-mail addresses."""
+    text = _LONG_NUM.sub(lambda m: mask(m.group(0).replace(" ", "")), text)
+    return _EMAIL.sub(lambda m: f"{m.group(1)}***@{m.group(2)}", text)
 
 
 def build(plan: dict, state: dict, events: list[tuple]) -> str:
