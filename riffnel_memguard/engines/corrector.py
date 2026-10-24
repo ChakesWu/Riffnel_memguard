@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from ..core.audit import AuditLog
 from ..core.models import Action, Finding, MemoryRecord, Plan, sha256_json
 from ..core.models import scope_compatible  # noqa: F401
-from ..extract.rules import memory_claim
+from ..extract.rules import detect_lang, memory_claim
 from .linker import derived_closure as _derived_closure
 
 
@@ -38,15 +38,19 @@ def make_plan(findings: list[Finding], store, incident_id: str | None, clauses_b
             clause = clauses_by_key[f.evidence["key"]]
             cur = clause.version_at(as_of)
             add(Action(type="invalidate", target=rec.id, payload={"reason": f"superseded by {cur.version}"}))
+            lang = rec.lang or detect_lang(rec.content)
+            # a replacement is needed per language: a Chinese memory with the right value does not serve Portuguese questions
             exists = any(r.status == "active" and r.id != rec.id and r.scope == rec.scope
+                         and (r.lang or detect_lang(r.content)) == lang
                          and (mc := memory_claim(r, clause)) is not None and mc.value == cur.value
                          for r in store.list())
             planned = any(x.type == "add" and x.payload["record"]["key"] == clause.key
-                          and x.payload["record"]["scope"] == rec.scope for x in actions)
+                          and x.payload["record"]["scope"] == rec.scope and x.payload["record"].get("lang") == lang
+                          for x in actions)
             # only facts get a replacement: a stale summary is retired, not re-created
             if not exists and not planned and rec.kind == "fact":
-                new = MemoryRecord(id=_id("mem", rec.id + cur.id), content=cur.text, kind="fact", scope=rec.scope,
-                                   key=clause.key, value=cur.value, written_at=as_of, supersedes=rec.id)
+                new = MemoryRecord(id=_id("mem", rec.id + cur.id), content=cur.text_in(lang), kind="fact", scope=rec.scope,
+                                   key=clause.key, value=cur.value, written_at=as_of, supersedes=rec.id, lang=lang)
                 add(Action(type="add", target=new.id, payload={"record": new.model_dump()}))
             for d in derived:
                 add(Action(type="purge_derived", target=d, payload={"mode": "invalidate"}))

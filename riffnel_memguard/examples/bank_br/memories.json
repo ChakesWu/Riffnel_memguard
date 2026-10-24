@@ -1,0 +1,69 @@
+[
+  {
+    "id": "m_w_zh",
+    "content": "金卡免年费需要每年刷满6笔（自2026-07-01起生效）。",
+    "lang": "zh",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "written_at": "2026-07-02"
+  },
+  {
+    "id": "m_w_en",
+    "content": "The Gold card annual fee is waived with 6 purchases per year (effective 2026-07-01).",
+    "lang": "en",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "written_at": "2026-07-02"
+  },
+  {
+    "id": "m_w_pt",
+    "content": "A anuidade do cartão Ouro é isenta com 3 compras por ano.",
+    "lang": "pt",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "written_at": "2025-02-01"
+  },
+  {
+    "id": "m_w_pt_sum",
+    "content": "Resumo do atendimento: o cliente perguntou sobre a anuidade do cartão Ouro; respondemos 3 compras.",
+    "lang": "pt",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "written_at": "2025-03-10",
+    "kind": "summary",
+    "derived_from": [
+      "m_w_pt"
+    ]
+  },
+  {
+    "id": "m_t_zh",
+    "content": "金卡账单还款期限为10天。",
+    "lang": "zh",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "written_at": "2025-02-01"
+  },
+  {
+    "id": "m_t_pt",
+    "content": "O prazo de pagamento da fatura do cartão Ouro é de 10 dias.",
+    "lang": "pt",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "written_at": "2025-02-01"
+  },
+  {
+    "id": "m_t_en",
+    "content": "The Gold card statement payment term is 10 days.",
+    "lang": "en",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "written_at": "2025-02-01"
+  }
+]

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Any, Literal, Optional
+from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -33,6 +33,7 @@ class MemoryRecord(BaseModel):
     derived_from: list[str] = Field(default_factory=list)
     supersedes: Optional[str] = None
     source_ref: Optional[str] = None  # explicit clause-version id, if the writer recorded one
+    lang: Optional[str] = None  # 'zh', 'pt' or 'en' when known; otherwise guessed from the text
 
     def sha(self) -> str:
         return sha256_json(self.model_dump())
@@ -45,6 +46,10 @@ class ClauseVersion(BaseModel):
     value: Any
     valid_from: str
     valid_to: Optional[str] = None
+    texts: dict[str, str] = Field(default_factory=dict)  # the same clause text per language ('zh', 'pt', 'en')
+
+    def text_in(self, lang: Optional[str]) -> str:
+        return self.texts.get(lang or "", self.text)
 
 
 class Clause(BaseModel):
@@ -53,8 +58,11 @@ class Clause(BaseModel):
     title: str
     topic: Optional[str] = None
     scope: dict[str, str] = Field(default_factory=dict)
-    unit: str
-    keywords: list[str]
+    unit: Union[str, list[str]]  # one unit, or one per language: ["笔", "compras", "purchases"]
+    keywords: list[str]  # phrases that mention this clause, in any of the languages
+
+    def units(self) -> list[str]:
+        return [self.unit] if isinstance(self.unit, str) else list(self.unit)
     versions: list[ClauseVersion]
 
     def version_at(self, date: str) -> Optional[ClauseVersion]:

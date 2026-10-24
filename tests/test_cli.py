@@ -41,7 +41,7 @@ def test_stepwise_erasure_flow_masks_report(tmp_path):
     ok(run(app, ["verify", pid, *ws]))
     ok(run(app, ["report", pid, *ws]))
     md = (tmp_path / "reports" / f"{pid}.md").read_text(encoding="utf-8")
-    assert "13800000000" not in md and "138****0000" in md and "四层均无命中" in md
+    assert "13800000000" not in md and "138****0000" in md and "硬性关卡均无命中" in md
 
 
 def test_revalidate_command(tmp_path):

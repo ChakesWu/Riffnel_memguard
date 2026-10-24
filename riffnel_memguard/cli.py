@@ -34,10 +34,11 @@ def _call(fn, *a, **k):
 
 
 @app.command()
-def init(ws: Path = WS_OPT, example: bool = typer.Option(True, help="Copy the simulated bank example")):
+def init(ws: Path = WS_OPT,
+         example: str = typer.Option("bank", help="Simulated example to copy: bank (Chinese), bank_br (Brazil, zh/pt/en) or none")):
     """Create a workspace (with the simulated bank example by default)."""
-    Workspace(ws).init(example)
-    typer.echo(f"已初始化 {ws}")
+    _call(Workspace(ws).init, False if example == "none" else example)
+    typer.echo(f"已初始化 {ws}（示例：{example}）")
 
 
 @app.command()
@@ -194,6 +195,21 @@ def verify(plan_id: str, question: list[str] = typer.Option(["我的手机号是
     raise typer.Exit(0 if all(v["passed"] for v in res.values()) else 1)
 
 
+@app.command()
+def crosslingual(as_of: str = typer.Option(..., help="Date whose clause versions are the truth"),
+                 agent_cmd: Optional[str] = typer.Option(None, "--agent-cmd"),
+                 agent_timeout: float = typer.Option(60.0, "--agent-timeout"), ws: Path = WS_OPT):
+    """Ask the same questions in every language of the workspace's i18n checks and compare the answers."""
+    results, fs, pid = _call(service.check_crosslingual, Workspace(ws), as_of, agent_cmd, agent_timeout)
+    for r in results:
+        typer.echo(f"{r.check_id}（{r.key}）应为 {r.expected}：" + "　".join(
+            f"{x.lang}={x.value}{'✓' if x.correct else '✗' if x.correct is False else '?'}" for x in r.results)
+            + ("　一致且正确" if r.passed else "　不一致或有错"))
+    for f in fs:
+        typer.echo(f"{f.cls} {f.memory_id}（{f.evidence.get('language')}）：{mask_text(f.evidence.get('memory_text', ''))}")
+    typer.echo(f"方案 {pid}" if pid else "各语言答案一致且正确。" if all(r.passed for r in results) else "有不一致，但没有找到责任记忆。")
+
+
 @app.command("erase-discard")
 def erase_discard(erasure_id: str, ws: Path = WS_OPT):
     """Drop the stored target values of an erasure request without verifying."""
@@ -201,16 +217,19 @@ def erase_discard(erasure_id: str, ws: Path = WS_OPT):
 
 
 @app.command()
-def report(plan_id: str, ws: Path = WS_OPT):
-    """Write the Markdown evidence report."""
-    typer.echo(str(_call(service.report, Workspace(ws), plan_id)))
+def report(plan_id: str, lang: str = typer.Option("zh", help="Report language: zh, en or pt"), ws: Path = WS_OPT):
+    """Write the Markdown evidence report (Chinese, English or Brazilian Portuguese)."""
+    typer.echo(str(_call(service.report, Workspace(ws), plan_id, lang)))
 
 
 @app.command()
-def demo(scenario: str = typer.Argument(..., help="stale | erasure | sqlite-* | real-* (Mem0) | letta-* (needs a running Letta server)"),
+def demo(scenario: str = typer.Argument(..., help="stale | erasure | crosslingual | sqlite-* | real-* (Mem0) | letta-* (needs a running Letta server)"),
          workdir: Path = typer.Option(None, help="Where to write working files (default: temp dir)")):
     """Run a full offline demo on simulated data."""
     runner = {"stale": demo_mod.run_stale, "erasure": demo_mod.run_erasure}.get(scenario)
+    if scenario == "crosslingual":
+        from . import demo_crosslingual
+        runner = demo_crosslingual.run
     if scenario.startswith("sqlite-"):
         base = {"sqlite-stale": demo_mod.run_stale, "sqlite-erasure": demo_mod.run_erasure}.get(scenario)
         runner = (lambda wd: base(wd, store_kind="sqlite")) if base else None
@@ -228,7 +247,7 @@ def demo(scenario: str = typer.Argument(..., help="stale | erasure | sqlite-* | 
         base = {"letta-stale": demo_real.run_stale, "letta-erasure": demo_real.run_erasure}.get(scenario)
         runner = (lambda wd: base(wd, backend="letta")) if base else None
     if runner is None:
-        raise typer.BadParameter("scenario must be stale, erasure, sqlite-stale, sqlite-erasure, real-stale, real-erasure, letta-stale or letta-erasure")
+        raise typer.BadParameter("scenario must be stale, erasure, crosslingual, sqlite-stale, sqlite-erasure, real-stale, real-erasure, letta-stale or letta-erasure")
     wd = workdir or Path(tempfile.mkdtemp(prefix="riffnel_"))
     try:
         result = runner(wd)

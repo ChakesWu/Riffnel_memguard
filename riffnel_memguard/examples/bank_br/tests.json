@@ -1,0 +1,80 @@
+[
+  {
+    "id": "t_w_zh",
+    "key": "cartao.ouro.anuidade.isencao_min_compras",
+    "question": "金卡免年费需要刷几笔？",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "must_include": [
+      "6笔"
+    ],
+    "must_not_include": [
+      "3笔"
+    ]
+  },
+  {
+    "id": "t_w_pt",
+    "key": "cartao.ouro.anuidade.isencao_min_compras",
+    "question": "Quantas compras por ano são necessárias para isentar a anuidade do cartão Ouro?",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "must_include": [
+      "6 compras"
+    ],
+    "must_not_include": [
+      "3 compras"
+    ]
+  },
+  {
+    "id": "t_w_en",
+    "key": "cartao.ouro.anuidade.isencao_min_compras",
+    "question": "How many purchases per year does the Gold card need to waive the annual fee?",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "must_include": [
+      "6 purchases"
+    ],
+    "must_not_include": [
+      "3 purchases"
+    ]
+  },
+  {
+    "id": "t_t_zh",
+    "key": "cartao.ouro.fatura.prazo_pagamento_dias",
+    "question": "金卡账单还款期限是几天？",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "must_include": [
+      "10天"
+    ],
+    "must_not_include": []
+  },
+  {
+    "id": "t_t_pt",
+    "key": "cartao.ouro.fatura.prazo_pagamento_dias",
+    "question": "Qual é o prazo de pagamento da fatura do cartão Ouro?",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "must_include": [
+      "10 dias"
+    ],
+    "must_not_include": []
+  },
+  {
+    "id": "t_t_en",
+    "key": "cartao.ouro.fatura.prazo_pagamento_dias",
+    "question": "What is the payment term for the Gold card statement?",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "must_include": [
+      "10 days"
+    ],
+    "must_not_include": []
+  }
+]

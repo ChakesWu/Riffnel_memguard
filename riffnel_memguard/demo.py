@@ -89,7 +89,7 @@ def run_erasure(workdir: Path, log=print, store_kind: str = "json") -> dict:
     corrector.apply(plan, store, audit)
 
     post = verifier.erasure(store, agent, scope, targets, desc, questions)
-    log(f"[探测·修正后] {'四层均无命中' if post['passed'] else '仍有残留'}")
+    log(f"[探测·修正后] {'硬性关卡均无命中' if post['passed'] else '仍有残留'}")
     ok, bad = audit.verify()
     log(f"[审计链] {'完整' if ok else f'第 {bad} 条异常'}")
     return {"findings": findings, "plan": plan, "pre": pre, "post": post, "audit_ok": ok,

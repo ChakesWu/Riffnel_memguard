@@ -12,7 +12,8 @@ from .audit import AuditLog
 from .locking import atomic_write, file_lock
 from .models import Source, TestCase
 
-EXAMPLES = Path(__file__).resolve().parents[1] / "examples" / "bank"
+EXAMPLES_ROOT = Path(__file__).resolve().parents[1] / "examples"
+EXAMPLES = EXAMPLES_ROOT / "bank"  # kept for callers that import it
 
 
 class Workspace:
@@ -23,11 +24,17 @@ class Workspace:
     def initialized(self) -> bool:
         return (self.root / "memories.json").exists()
 
-    def init(self, example: bool = True) -> None:
+    def init(self, example: bool | str = True) -> None:
+        """example: True or "bank" (Chinese example bank), "bank_br" (Brazilian bank in zh/pt/en), False (empty)."""
         self.root.mkdir(parents=True, exist_ok=True)
         if example:
-            for n in ("memories.json", "sources.json", "tests.json"):
-                shutil.copy(EXAMPLES / n, self.root / n)
+            name = "bank" if example is True else example
+            src = EXAMPLES_ROOT / name
+            if not src.is_dir():
+                raise ValueError(f"unknown example {name!r}; choose bank or bank_br")
+            for n in ("memories.json", "sources.json", "tests.json", "i18n_checks.json"):
+                if (src / n).exists():
+                    shutil.copy(src / n, self.root / n)
         self._write_state({"incidents": {}, "plans": {}, "erasures": {}, "verifications": {}})
 
     def _require(self) -> None:
@@ -53,6 +60,12 @@ class Workspace:
         return [TestCase(**t) for t in json.loads((self.root / "tests.json").read_text(encoding="utf-8"))]
 
     # -- state: read-only snapshot, or a locked read-modify-write transaction -----------------------
+    @property
+    def i18n_checks(self) -> list[dict]:
+        """Cross-lingual consistency checks: the same question in several languages (see engines/crosslingual.py)."""
+        f = self.root / "i18n_checks.json"
+        return json.loads(f.read_text(encoding="utf-8")) if f.exists() else []
+
     def state(self) -> dict:
         self._require()
         return json.loads((self.root / "state.json").read_text(encoding="utf-8"))

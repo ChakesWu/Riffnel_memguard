@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from ..adapters.base import similarity
 from ..core.models import Clause, ClauseVersion, Finding, ProvenanceLink, scope_compatible
-from ..extract.rules import memory_claim
+from ..extract.rules import detect_lang, memory_claim
 
 # Default minimum text similarity for a semantic link. 0.2 is an unvalidated starting value:
 # paraphrased summaries in the simulated data score about 0.26-0.28 (see tests/test_linker.py).
@@ -45,7 +45,7 @@ def link(store, clauses: list[Clause], threshold: float = SEMANTIC_THRESHOLD):
             if rec.key == clause.key:
                 links.append(ProvenanceLink(memory_id=rec.id, clause_version_id=v.id, method="key_match", confidence=0.9))
                 continue
-            sim = round(similarity(rec.content, [v.text])[0], 3)
+            sim = round(similarity(rec.content, [v.text_in(rec.lang or detect_lang(rec.content))])[0], 3)
             if sim >= threshold:
                 links.append(ProvenanceLink(memory_id=rec.id, clause_version_id=v.id, method="semantic", confidence=sim))
             else:

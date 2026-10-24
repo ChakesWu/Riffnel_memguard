@@ -90,3 +90,55 @@ def test_ui_does_not_execute_external_commands_by_default(tmp_path, monkeypatch)
     click(at, "验证")
     assert any("默认不执行" in wmsg.value for wmsg in at.warning)
     assert not marker.exists() and pid not in w.state()["verifications"]
+
+
+def test_ui_crosslingual_flow(tmp_path, monkeypatch):
+    # Streamlit's AppTest cannot re-run a radio that uses format_func under a non-Chinese label, so the click-through
+    # runs in Chinese; the English and Portuguese rendering is covered by the next test.
+    monkeypatch.setenv("RIFFNEL_WS", str(tmp_path))
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    click(at, "用巴西仿真示例初始化（中/葡/英）")
+    at.sidebar.radio[0].set_value("跨语言一致性").run()
+    click(at, "运行跨语言检查")
+    assert not at.exception
+    assert any("pt" in e.value for e in at.error)
+    at.text_input(key=next(t.key for t in at.text_input if t.key and t.key.startswith("by_"))).set_value("tester").run()
+    click(at, "审批")
+    click(at, "应用")
+    click(at, "验证")
+    assert not at.exception
+    state = json.loads((tmp_path / "state.json").read_text(encoding="utf-8"))
+    (plan,) = state["plans"].values()
+    assert plan["status"] == "applied"
+    assert state["verifications"][plan["id"]]["crosslingual"]["passed"]
+
+
+@pytest.mark.parametrize("code,word", [("en", "Overview"), ("pt", "Visão geral")])
+def test_ui_renders_in_other_languages(tmp_path, monkeypatch, code, word):
+    monkeypatch.setenv("RIFFNEL_WS", str(tmp_path))
+    monkeypatch.setenv("RIFFNEL_UI_LANG", code)
+    at = AppTest.from_file(APP, default_timeout=60).run()
+    brazil = [b for b in at.button if "(zh/pt/en)" in b.label or "(中/葡/英)" in b.label]
+    assert not at.exception and len(brazil) == 1
+    brazil[0].click().run()
+    assert not at.exception
+    assert word in at.sidebar.radio[0].options
+
+
+def test_every_ui_text_is_translated():
+    import ast
+    import re
+    from riffnel_memguard.i18n import missing
+    tree = ast.parse(Path(APP).read_text(encoding="utf-8"))
+    texts = set()
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Call) and getattr(n.func, "id", None) == "T" and n.args:
+            try:
+                s = ast.literal_eval(n.args[0])
+            except ValueError:
+                continue
+            if re.search(r"[一-鿿]", s):
+                texts.add(s)
+    assert texts
+    for lg in ("en", "pt"):
+        assert missing(lg, sorted(texts)) == []

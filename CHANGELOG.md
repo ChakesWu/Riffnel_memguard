@@ -18,3 +18,4 @@
 - Letta 适配器（归档记忆，标签保存字段、替换式修改、游标分页）、`demo letta-stale/letta-erasure`、真实 Letta 服务端上的 6 项集成测试与可复现的测试环境脚本；Web 界面可接入外部智能体（默认关闭，防远程执行）。
 - 安全与可靠性修复（对照工具自己的说法检查得出）：删除后清除工作区内的目标值副本（`secrets/` 暂存、`state.json` 与报告清除）、强制方案状态机与审批人政策、日志式可恢复应用、文件锁与原子写入、审计 HMAC 与链头、`--target-file`、邮箱遮罩；14 项回归测试。
 - 修复：`agent` extra 的版本固定按 Python 版本分别设置（pydantic-ai-slim 2.55 起要求 Python 3.11，原固定使 Python 3.10 无法安装）。
+- 多语言（中/葡/英）：规则抽取支持葡语与英语数字和单位；条款可带各语言文本；跨语言一致性检查（`crosslingual` 命令、`demo crosslingual`）——同一问题用多种语言各问一次，发现某一语言的记忆仍是旧值，归因、按该语言修正并复查；巴西仿真示例（`init --example bank_br`，虚构银行）；证据报告与 Web 界面支持中文 / English / Português（`report --lang`、`RIFFNEL_UI_LANG`）。限制：葡语文本未经母语者审校；抽取不支持百位数词、序数和分数；数据为仿真。测试 110 项。

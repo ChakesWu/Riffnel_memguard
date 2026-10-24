@@ -1,0 +1,95 @@
+[
+  {
+    "id": "src_br",
+    "name": "Termos do cartão do Banco Exemplo do Brasil (SIMULADO)",
+    "issuer": "Banco Exemplo do Brasil (fictício)",
+    "type": "product_terms",
+    "clauses": [
+      {
+        "id": "cl_waiver",
+        "key": "cartao.ouro.anuidade.isencao_min_compras",
+        "title": "Isenção da anuidade — cartão Ouro",
+        "topic": "annual_fee.waiver_min_txn",
+        "scope": {
+          "product": "ouro_card"
+        },
+        "unit": [
+          "compras",
+          "compra",
+          "purchases",
+          "purchase",
+          "笔"
+        ],
+        "keywords": [
+          "anuidade do cartão Ouro",
+          "Gold card annual fee",
+          "金卡免年费"
+        ],
+        "versions": [
+          {
+            "id": "cv_w1",
+            "version": "v1",
+            "text": "A anuidade do cartão Ouro é isenta com 3 compras por ano.",
+            "value": 3,
+            "valid_from": "2025-01-01",
+            "valid_to": "2026-06-30",
+            "texts": {
+              "zh": "金卡免年费需要每年刷满3笔。",
+              "pt": "A anuidade do cartão Ouro é isenta com 3 compras por ano.",
+              "en": "The Gold card annual fee is waived with 3 purchases per year."
+            }
+          },
+          {
+            "id": "cv_w2",
+            "version": "v2",
+            "text": "A anuidade do cartão Ouro é isenta com 6 compras por ano (em vigor desde 2026-07-01).",
+            "value": 6,
+            "valid_from": "2026-07-01",
+            "valid_to": null,
+            "texts": {
+              "zh": "金卡免年费需要每年刷满6笔（自2026-07-01起生效）。",
+              "pt": "A anuidade do cartão Ouro é isenta com 6 compras por ano (em vigor desde 2026-07-01).",
+              "en": "The Gold card annual fee is waived with 6 purchases per year (effective 2026-07-01)."
+            }
+          }
+        ]
+      },
+      {
+        "id": "cl_term",
+        "key": "cartao.ouro.fatura.prazo_pagamento_dias",
+        "title": "Prazo de pagamento da fatura — cartão Ouro",
+        "topic": "statement.payment_term",
+        "scope": {
+          "product": "ouro_card"
+        },
+        "unit": [
+          "dias",
+          "dia",
+          "days",
+          "day",
+          "天"
+        ],
+        "keywords": [
+          "prazo de pagamento da fatura do cartão Ouro",
+          "Gold card statement payment term",
+          "金卡账单还款期限"
+        ],
+        "versions": [
+          {
+            "id": "cv_t1",
+            "version": "v1",
+            "text": "O prazo de pagamento da fatura do cartão Ouro é de 10 dias.",
+            "value": 10,
+            "valid_from": "2025-01-01",
+            "valid_to": null,
+            "texts": {
+              "zh": "金卡账单还款期限为10天。",
+              "pt": "O prazo de pagamento da fatura do cartão Ouro é de 10 dias.",
+              "en": "The Gold card statement payment term is 10 days."
+            }
+          }
+        ]
+      }
+    ]
+  }
+]

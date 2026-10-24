@@ -1,0 +1,26 @@
+[
+  {
+    "id": "chk_waiver",
+    "key": "cartao.ouro.anuidade.isencao_min_compras",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "questions": {
+      "zh": "金卡免年费需要刷几笔？",
+      "pt": "Quantas compras por ano são necessárias para isentar a anuidade do cartão Ouro?",
+      "en": "How many purchases per year does the Gold card need to waive the annual fee?"
+    }
+  },
+  {
+    "id": "chk_term",
+    "key": "cartao.ouro.fatura.prazo_pagamento_dias",
+    "scope": {
+      "product": "ouro_card"
+    },
+    "questions": {
+      "zh": "金卡账单还款期限是几天？",
+      "pt": "Qual é o prazo de pagamento da fatura do cartão Ouro?",
+      "en": "What is the payment term for the Gold card statement?"
+    }
+  }
+]

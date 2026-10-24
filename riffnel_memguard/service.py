@@ -10,7 +10,7 @@ from .core import scrub
 from .core.locking import atomic_write
 from .core.models import Finding, Incident, Plan
 from .core.workspace import Workspace
-from .engines import corrector, investigator, linker, verifier
+from .engines import corrector, crosslingual, investigator, linker, verifier
 from .probes.erasure import mask
 from .report.markdown import build
 
@@ -191,7 +191,7 @@ def verify(w: Workspace, plan_id: str, questions: list[str], agent_cmd: str | No
     st = w.state()  # read-only snapshot: probing may call an external agent and must not hold the workspace lock
     p = get_plan(st, plan_id)
     inc = st["incidents"].get(p.get("incident_id") or "", {})
-    cmd = agent_cmd or inc.get("agent_cmd")
+    cmd = agent_cmd or inc.get("agent_cmd") or p.get("agent_cmd")
     agent, res = make_agent(w, cmd, timeout or inc.get("agent_timeout", 60.0)), {}
     affected = {f["evidence"]["key"] for f in p["findings"] if "key" in f["evidence"]}
     er_id = p.get("erasure_id")
@@ -203,6 +203,9 @@ def verify(w: Workspace, plan_id: str, questions: list[str], agent_cmd: str | No
         res["erasure"] = verifier.erasure(w.store, agent, secret["subject"], secret["targets"], secret["description"], questions)
     else:
         res["regression"] = verifier.regression(agent, w.tests, affected)
+    if p.get("source") == "crosslingual":
+        rs = crosslingual.run(agent, w.i18n_checks, w.clauses, p["as_of"])
+        res["crosslingual"] = {"passed": all(r.passed for r in rs), "checks": _results_dump(rs)}
     with w.transaction() as st2:
         st2["verifications"][plan_id] = res
         legacy = st2["erasures"].get(er_id or "", {})
@@ -214,10 +217,13 @@ def verify(w: Workspace, plan_id: str, questions: list[str], agent_cmd: str | No
     return res
 
 
-def report(w: Workspace, plan_id: str) -> Path:
+def report(w: Workspace, plan_id: str, lang: str = "zh") -> Path:
+    """Write the evidence report. lang: zh, en or pt (the file is reports/<plan>.md, or <plan>.<lang>.md for en and pt)."""
+    if lang not in ("zh", "en", "pt"):
+        raise ValueError("lang must be zh, en or pt")
     st = w.state()
-    md = build(get_plan(st, plan_id), st, w.audit.events())
-    out = w.root / "reports" / f"{plan_id}.md"
+    md = build(get_plan(st, plan_id), st, w.audit.events(), lang)
+    out = w.root / "reports" / (f"{plan_id}.md" if lang == "zh" else f"{plan_id}.{lang}.md")
     out.parent.mkdir(exist_ok=True)
     atomic_write(out, md, mode=0o644)
     return out
@@ -266,3 +272,26 @@ def scan(w: Workspace, as_of: str) -> tuple[list[Finding], str | None]:
     with w.transaction() as st:
         p = corrector.make_plan(fs, w.store, None, {c.key: c for c in w.clauses}, as_of)
         return fs, _register(w, st, p, fs, as_of, source="scan")
+
+
+def _results_dump(results) -> list[dict]:
+    return [{**r.model_dump(), "consistent": r.consistent, "passed": r.passed, "outliers": r.outliers} for r in results]
+
+
+def check_crosslingual(w: Workspace, as_of: str, agent_cmd: str | None = None, timeout: float = 60.0, plan: bool = True):
+    """Ask every i18n check in all its languages. Returns (results, findings, plan_id or None).
+
+    Findings are the memories behind wrong answers. With plan=True a correction plan is drafted when there are findings.
+    """
+    checks = w.i18n_checks
+    if not checks:
+        raise ValueError("this workspace has no i18n_checks.json; create it with `init --example bank_br` or add your own")
+    agent = make_agent(w, agent_cmd, timeout)
+    results = crosslingual.run(agent, checks, w.clauses, as_of)  # may call an external agent: outside the lock
+    fs = crosslingual.findings_for(results, checks, w.store, w.clauses, as_of)
+    pid = None
+    if plan and fs:
+        with w.transaction() as st:
+            p = corrector.make_plan(fs, w.store, None, {c.key: c for c in w.clauses}, as_of)
+            pid = _register(w, st, p, fs, as_of, source="crosslingual", agent_cmd=agent_cmd)
+    return results, fs, pid
