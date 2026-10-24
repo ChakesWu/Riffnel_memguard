@@ -209,6 +209,59 @@ def page_incident(w: Workspace) -> None:
         plan_panel(w, st.session_state["plan"])
 
 
+def _chat_add(role: str, text: str, mark: str = "") -> None:
+    st.session_state.setdefault("chat", []).append((role, text, mark))
+
+
+def _chat_run_check(w: Workspace, as_of: str) -> None:
+    """Ask the first cross-lingual check in every language, as a conversation, and flag the answers that are wrong."""
+    check = w.i18n_checks[0]
+    results, _, pid = service.check_crosslingual(w, as_of)
+    st.session_state["chat_plan"] = pid
+    res = next(r for r in results if r.check_id == check["id"])
+    for r in res.results:
+        _chat_add("user", f"[{r.lang}] {r.question}")
+        _chat_add("assistant", r.answer, "ok" if r.correct else "bad")
+    _chat_add("system", T("各语言一致且正确") if res.passed else T("不一致：{langs} 与有效条款不符", langs=", ".join(res.outliers)),
+              "ok" if res.passed else "bad")
+
+
+def page_chat(w: Workspace) -> None:
+    st.header(T("对话演示"))
+    st.caption(T("像和客服智能体聊天一样提问；再让 Riffnel 用每种语言各问一遍，找出落后的那一种并修正。"))
+    d = DEFAULTS[example_kind(w)]
+    as_of = "2026-09-01"
+    for role, text, mark in st.session_state.get("chat", []):
+        with st.chat_message(role if role != "system" else "assistant"):
+            st.write(mask_text(text))
+            if mark == "ok":
+                st.caption("✓ " + T("与当时有效的条款一致"))
+            elif mark == "bad":
+                st.caption("✗ " + T("与当时有效的条款不符"))
+    q = st.chat_input(T("向智能体提问……"))
+    if q:
+        answer, _ = service.make_agent(w).answer(q, service._parse_scope([d["scope"]]))
+        _chat_add("user", q)
+        _chat_add("assistant", answer)
+        st.rerun()
+    c1, c2 = st.columns(2)
+    if w.i18n_checks and c1.button(T("用每种语言各问一遍")):
+        _chat_run_check(w, as_of)
+        st.rerun()
+    pid = st.session_state.get("chat_plan")
+    if pid and pid in w.state()["plans"] and w.state()["plans"][pid]["status"] != "applied":
+        if c2.button(T("用 Riffnel 修正并复查")):
+            guarded(service.approve, w, pid, "demo-reviewer")
+            if guarded(service.apply, w, pid) is not None:
+                guarded(service.verify, w, pid, [])
+                _chat_add("system", T("已修正并复查：{plan}", plan=pid), "ok")
+                _chat_run_check(w, as_of)
+            st.rerun()
+    if st.button(T("清空对话")):
+        st.session_state["chat"] = []
+        st.rerun()
+
+
 def page_crosslingual(w: Workspace) -> None:
     st.header(T("跨语言一致性"))
     st.caption(T("同一个事实用多种语言各问一次，比较智能体的回答是否一致、是否与当时有效的条款一致。"))
@@ -275,7 +328,7 @@ def page_audit(w: Workspace) -> None:
     st.dataframe([dict(zip(cols, e)) for e in w.audit.events()], use_container_width=True)
 
 
-PAGES = {"总览": page_overview, "事故调查": page_incident, "跨语言一致性": page_crosslingual, "删除请求": page_erasure,
+PAGES = {"对话演示": page_chat, "总览": page_overview, "事故调查": page_incident, "跨语言一致性": page_crosslingual, "删除请求": page_erasure,
          "来源更新": page_revalidate, "审计链": page_audit}
 
 

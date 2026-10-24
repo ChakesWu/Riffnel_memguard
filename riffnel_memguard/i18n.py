@@ -47,6 +47,18 @@ _TR: dict[str, dict[str, str]] = {
     "用仿真示例初始化": {_E: "Initialize with the simulated example", _P: "Inicializar com o exemplo simulado"},
     "用巴西仿真示例初始化（中/葡/英）": {_E: "Initialize with the simulated Brazilian example (zh/pt/en)",
                                       _P: "Inicializar com o exemplo brasileiro simulado (zh/pt/en)"},
+    # ---- chat demo
+    "对话演示": {_E: "Chat demo", _P: "Demonstração em chat"},
+    "像和客服智能体聊天一样提问；再让 Riffnel 用每种语言各问一遍，找出落后的那一种并修正。": {
+        _E: "Chat with the customer-service agent as usual; then let Riffnel ask the same question in every language, find the one that is behind, and fix it.",
+        _P: "Converse com o agente de atendimento como de costume; depois o Riffnel faz a mesma pergunta em cada idioma, encontra o que está desatualizado e o corrige."},
+    "与当时有效的条款一致": {_E: "Matches the clause valid at that date", _P: "Conforme a cláusula vigente na data"},
+    "与当时有效的条款不符": {_E: "Does not match the clause valid at that date", _P: "Diverge da cláusula vigente na data"},
+    "向智能体提问……": {_E: "Ask the agent…", _P: "Pergunte ao agente…"},
+    "用每种语言各问一遍": {_E: "Ask in every language", _P: "Perguntar em cada idioma"},
+    "用 Riffnel 修正并复查": {_E: "Fix with Riffnel and re-check", _P: "Corrigir com o Riffnel e reverificar"},
+    "已修正并复查：{plan}": {_E: "Fixed and re-checked: {plan}", _P: "Corrigido e reverificado: {plan}"},
+    "清空对话": {_E: "Clear chat", _P: "Limpar conversa"},
     # ---- plan panel
     "修正方案 {plan_id}　状态：{status}": {_E: "Correction plan {plan_id}  Status: {status}", _P: "Plano de correção {plan_id}  Situação: {status}"},
     "已清除工作区状态中含目标值的 {n} 处文本，删除含目标值的报告 {m} 份。": {

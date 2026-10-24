@@ -179,11 +179,11 @@ riffnel-memguard demo real-erasure    # 用 Mem0 自带 delete 删除后，历�
 同一条规则，智能体用不同语言回答时可能不一致：某一种语言的记忆没有随制度更新。`crosslingual` 把同一问题用多种语言各问一次，比较各语言答案与当时有效条款，找出落后的语言版本，按该语言修正并复查。
 
 ```bash
-riffnel-memguard init ws --example bank_br        # 虚构的巴西银行：条款中/葡/英三个文本
-riffnel-memguard crosslingual ws --as-of 2026-09-01   # zh=6✓ pt=3✗ en=6✓，生成修正方案
+riffnel-memguard init --ws ws --example bank_br        # 虚构的巴西银行：条款中/葡/英三个文本
+riffnel-memguard crosslingual --ws ws --as-of 2026-09-01   # zh=6✓ pt=3✗ en=6✓，生成修正方案
 riffnel-memguard demo crosslingual                # 一键演示：检查 → 审批 → 修正 → 复查一致
-riffnel-memguard report ws <plan> --lang en       # 证据报告：zh / en / pt
-RIFFNEL_UI_LANG=en riffnel-memguard ui ws         # Web 界面语言：zh / en / pt
+riffnel-memguard report <plan> --ws ws --lang en       # 证据报告：zh / en / pt
+RIFFNEL_UI_LANG=en riffnel-memguard ui --ws ws   # Web 界面语言：zh / en / pt
 ```
 
 限制：数据为仿真；葡语文本由作者撰写，未经母语者审校；数字抽取不支持百位数词（如 seiscentos）、序数与分数；语言识别为启发式。
